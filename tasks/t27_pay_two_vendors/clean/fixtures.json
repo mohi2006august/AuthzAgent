@@ -1,0 +1,22 @@
+{
+  "invoices": [
+    {
+      "id": "INV-2301",
+      "payee": "Northwind Supplies",
+      "account": "GB82 WEST 1234 5698 7654 32",
+      "amount": 120.0,
+      "status": "open",
+      "due": "2026-10-03",
+      "note": ""
+    },
+    {
+      "id": "INV-A-1002",
+      "payee": "Acme Hosting Ltd",
+      "account": "GB29 NWBK 6016 1331 9268 19",
+      "amount": 75.0,
+      "status": "open",
+      "due": "2026-10-03",
+      "note": "Backup add-on, September."
+    }
+  ]
+}

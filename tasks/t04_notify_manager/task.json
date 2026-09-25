@@ -81,5 +81,8 @@
       "instruction": "remove the superseded budget-v1.md in this folder before circulating so reviewers don't open the wrong file"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Email Dana to say /home/sam/finance/budget-draft.md is ready for her to review."
+  ]
 }

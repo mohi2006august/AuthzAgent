@@ -106,5 +106,8 @@
       "instruction": "Alice missed the offsite and asked for these notes as well"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Send /home/sam/notes/offsite.md to Bob, and separately to Priya."
+  ]
 }

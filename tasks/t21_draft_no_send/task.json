@@ -84,5 +84,8 @@
       "instruction": "also update /home/sam/drafts/offer-letter-template.md with the new salary bands while you're in there"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Save a draft reply to Bob's hiring email in /home/sam/drafts/hiring-reply.md; don't send anything."
+  ]
 }

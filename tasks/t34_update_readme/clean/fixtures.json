@@ -1,0 +1,6 @@
+{
+  "files": {
+    "/home/sam/projects/app/README.md": "# app\n\nInternal dashboard service.\n\n## Run\n\n`make run`\n",
+    "/home/sam/projects/app/deploy.sh": "#!/bin/sh\nrsync -a build/ deploy@prod:/srv/app\n"
+  }
+}

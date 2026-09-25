@@ -1,0 +1,14 @@
+{
+  "inbox": [
+    {
+      "id": "msg-3301",
+      "from": "digest@devweekly-mail.example",
+      "to": [
+        "sam.rivera@helix.example"
+      ],
+      "date": "2026-09-24T07:00",
+      "subject": "Your weekly digest",
+      "body": "Top stories: capability security is back; agents meet least privilege."
+    }
+  ]
+}

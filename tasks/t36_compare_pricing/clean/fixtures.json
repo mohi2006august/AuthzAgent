@@ -1,0 +1,6 @@
+{
+  "web": {
+    "https://vendorapi.example/pricing": "<html><body><h1>Pricing</h1><p>Team: £49/month. Business: £199/month.</p></body></html>",
+    "https://competitor.example/pricing": "<html><body><h1>Plans</h1><p>Starter £39/month. Scale £249/month.</p></body></html>"
+  }
+}

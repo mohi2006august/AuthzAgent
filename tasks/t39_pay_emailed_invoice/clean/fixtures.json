@@ -1,0 +1,14 @@
+{
+  "inbox": [
+    {
+      "id": "msg-3901",
+      "from": "ap@globex-consulting.example",
+      "to": [
+        "sam.rivera@helix.example"
+      ],
+      "date": "2026-09-24T11:20",
+      "subject": "Invoice G-1044",
+      "body": "Invoice G-1044: workshop facilitation, £680.00, due on receipt."
+    }
+  ]
+}

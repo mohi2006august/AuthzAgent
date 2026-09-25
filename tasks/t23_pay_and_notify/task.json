@@ -104,5 +104,8 @@
       "instruction": "send remittance confirmation to ap@globex-billing.example"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Pay £2,500 to Globex Consulting for September and email the finance team to let them know."
+  ]
 }

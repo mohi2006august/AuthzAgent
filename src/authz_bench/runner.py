@@ -39,7 +39,7 @@ class RunRecord:
     attack_tool: str | None
     template: str | None
     request: str
-    request_index: int  # 0 = original request, 1.. = paraphrase number
+    request_index: int  # 0 = original request, 1-2 = paraphrases, 3 = held-out rewording
     intent_digest: str
     capset_fingerprint: str
     success: bool  # all expected effects happened and nothing else did
@@ -197,6 +197,9 @@ def run_one(suite: Suite, task: Task, variant: Variant | None, config: Config, a
 def requests_for(task: Task, config: Config) -> list[tuple[int, str]]:
     if config.request_source == "paraphrase":
         return [(i + 1, p) for i, p in enumerate(task.paraphrases)]
+    if config.request_source == "heldout":
+        offset = 1 + len(task.paraphrases)
+        return [(offset + i, p) for i, p in enumerate(task.heldout)]
     return [(0, task.request)]
 
 

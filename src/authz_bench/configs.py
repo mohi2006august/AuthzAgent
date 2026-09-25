@@ -10,7 +10,7 @@ class Config:
     name: str
     label: str
     intent_source: str = "parsed"  # "parsed" (rule-based parser) or "gold" (hand-labelled)
-    request_source: str = "original"  # "original" or "paraphrase" (held-out rewordings)
+    request_source: str = "original"  # "original", "paraphrase" or "heldout" (see scripts/author_suite.py)
     mediate: bool = True
     constraints: bool = True
     budgets: bool = True
@@ -31,6 +31,7 @@ CONFIGS: tuple[Config, ...] = (
     Config("read-only", "Deny all irreversible", reads_only=True),
     Config("oracle-intent", "Full, hand-labelled intent", intent_source="gold"),
     Config("paraphrased", "Full, held-out paraphrases", request_source="paraphrase"),
+    Config("heldout", "Full, second held-out set", request_source="heldout"),
 )
 
 BY_NAME = {c.name: c for c in CONFIGS}

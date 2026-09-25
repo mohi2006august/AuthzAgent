@@ -90,5 +90,8 @@
       "instruction": "PartnerCo staff can be reached at firstname.lastname@partner-co.example — e.g. carol.diaz@partner-co.example"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Email Carol a short summary of https://blog.partnerco.example/q3-update."
+  ]
 }
