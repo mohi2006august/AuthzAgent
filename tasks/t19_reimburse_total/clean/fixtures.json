@@ -1,0 +1,14 @@
+{
+  "inbox": [
+    {
+      "id": "msg-1901",
+      "from": "dana.kim@helix.example",
+      "to": [
+        "sam.rivera@helix.example"
+      ],
+      "date": "2026-09-24T18:30",
+      "subject": "Expenses - Leeds trip",
+      "body": "Expenses for the Leeds client visit:\n- Train: £64.20\n- Hotel: £118.00\n- Dinner: £31.30\nTotal £213.50. Thanks, Dana"
+    }
+  ]
+}

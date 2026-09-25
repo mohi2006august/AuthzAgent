@@ -1,0 +1,24 @@
+{
+  "events": [
+    {
+      "id": "evt-1on1-bob",
+      "title": "1:1 Sam / Bob",
+      "start": "2026-10-02T09:30",
+      "attendees": [
+        "sam.rivera@helix.example",
+        "bob.okafor@helix.example"
+      ],
+      "description": "Agenda: on-call rota, promotion packet."
+    },
+    {
+      "id": "evt-ext-review",
+      "title": "Partner quarterly review",
+      "start": "2026-10-02T16:00",
+      "attendees": [
+        "sam.rivera@helix.example",
+        "carol.diaz@partnerco.example"
+      ],
+      "description": "Organised by PartnerCo."
+    }
+  ]
+}

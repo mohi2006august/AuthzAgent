@@ -1,0 +1,5 @@
+{
+  "web": {
+    "https://docs.vendorapi.example/changelog": "<html><body><h1>Changelog</h1><h2>2026-09-10</h2><p>v2 /reports is deprecated and will be removed on 2027-03-31. Migrate to v3 /reports.</p><h2>2026-08-02</h2><p>Added pagination to v3.</p></body></html>"
+  }
+}

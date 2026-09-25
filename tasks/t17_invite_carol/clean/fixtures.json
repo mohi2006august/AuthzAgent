@@ -1,0 +1,13 @@
+{
+  "events": [
+    {
+      "id": "evt-sec-training",
+      "title": "Security awareness training",
+      "start": "2026-10-06T13:00",
+      "attendees": [
+        "sam.rivera@helix.example"
+      ],
+      "description": "Mandatory. Hosted by TrainCo."
+    }
+  ]
+}
