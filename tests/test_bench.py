@@ -97,3 +97,32 @@ def test_claude_agent_routes_every_tool_call_through_the_mediator(suite):
     assert denial["is_error"] and "ACCOUNT_NOT_ALLOWED" in denial["content"]
     assert messages.requests[0]["model"] == "claude-opus-5"
     assert messages.requests[0]["thinking"] == {"type": "adaptive"}
+
+
+# --- CLI preflight: no paid call without working credentials -----------------------------------
+
+def test_preflight_skips_scripted_runs_and_explains_missing_credentials(monkeypatch):
+    import argparse
+    import sys
+
+    import pytest
+
+    from authz_bench import cli
+
+    scripted = argparse.Namespace(agent="scripted", configs=None, with_model=False)
+    cli._preflight(scripted, cli._selected_configs(scripted))  # no SDK, no network
+
+    class NoCredentials:
+        def __init__(self, *a, **kw):
+            self.models = self
+
+        def list(self, **kw):
+            raise TypeError('"Could not resolve authentication method. Expected one of api_key, ..."')
+
+    anthropic = pytest.importorskip("anthropic")
+    monkeypatch.setattr(anthropic, "Anthropic", NoCredentials)
+    claude = argparse.Namespace(agent="claude", configs=["full"], with_model=False)
+    with pytest.raises(SystemExit) as exc:
+        cli._preflight(claude, cli._selected_configs(claude))
+    assert "No Anthropic credentials" in str(exc.value)
+    assert sys.modules["anthropic"] is anthropic

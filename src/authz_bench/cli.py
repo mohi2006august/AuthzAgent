@@ -15,12 +15,50 @@ from .tasks import DEFAULT_SUITE, load_suite
 
 DEFAULT_OUT = DEFAULT_SUITE.parent / "results"
 
+NO_CREDENTIALS = """No Anthropic credentials found, so nothing was run.
 
-def _run(args: argparse.Namespace) -> list:
-    suite = load_suite(args.suite)
+This command calls Claude. Set an API key in this terminal, then run it again:
+
+  PowerShell:  $env:ANTHROPIC_API_KEY = "<your key>"
+  bash:        export ANTHROPIC_API_KEY="<your key>"
+
+(Or run `ant auth login` once if you use the Anthropic CLI.) Keys are created at console.anthropic.com.
+The scripted-agent evaluation needs no credentials: python -m authz_bench all"""
+
+
+def _selected_configs(args: argparse.Namespace) -> list:
     configs = [BY_NAME[c] for c in args.configs] if args.configs else list(DEFAULT_CONFIGS)
     if args.with_model and not args.configs:
         configs += [c for c in BY_NAME.values() if c.needs_model]
+    return configs
+
+
+def _preflight(args: argparse.Namespace, configs: list) -> None:
+    """Fail fast, before any paid call, if a Claude-backed run has no working credentials."""
+    if args.agent == "scripted" and not any(c.needs_model for c in configs):
+        return
+    try:
+        import anthropic
+    except ImportError:
+        sys.exit('This needs the Anthropic SDK: pip install -e ".[agents]" (or use .venv/Scripts/python).')
+    try:
+        anthropic.Anthropic().models.list(limit=1)  # free: lists models, generates no tokens
+    except TypeError as exc:
+        if "authentication method" not in str(exc):
+            raise
+        sys.exit(NO_CREDENTIALS)
+    except anthropic.AuthenticationError:
+        sys.exit("Anthropic rejected the credentials (401). Check that ANTHROPIC_API_KEY is a valid, active key.")
+    except anthropic.PermissionDeniedError:
+        sys.exit("The credentials are valid but not permitted to use the API (403). Check the key's workspace.")
+    except anthropic.APIConnectionError:
+        sys.exit("Could not reach the Anthropic API. Check the network connection or proxy settings.")
+
+
+def _run(args: argparse.Namespace) -> list:
+    suite = load_suite(args.suite)
+    configs = _selected_configs(args)
+    _preflight(args, configs)
     agent_kwargs = {"p_follow": args.p_follow, "seed": args.seed} if args.agent == "scripted" else {}
     agent = make_agent(args.agent, **agent_kwargs)
     out = Path(args.out)
@@ -91,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "report":
         _report(args)
     elif args.command == "all":
+        _preflight(args, _selected_configs(args))
         print(f"wrote {generate(args.suite, seed=args.poison_seed)} poisoned variants")
         _report(args, _run(args))
     return 0

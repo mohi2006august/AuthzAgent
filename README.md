@@ -23,7 +23,7 @@ pip install -e ".[eval,dev]"
 python examples/quickstart.py        # derive / check / audit without an agent
 python -m authz_bench all            # generate poisoned variants, run 14 configurations, write results/
 python scripts/parser_versions.py    # parser v1 (from git tag) vs v2 accuracy by data split
-python -m pytest                     # 107 tests
+python -m pytest                     # 108 tests
 ```
 
 Without installing, prefix commands with `PYTHONPATH=src`. A ready environment with every extra
@@ -73,18 +73,31 @@ tests/
 
 ## Running with Claude
 
-Needs Anthropic credentials (`ANTHROPIC_API_KEY` or an `ant auth login` profile). None were available when
-these results were produced, so the numbers above come from the scripted agent.
+Needs an Anthropic API key in the terminal you run from (keys are created at console.anthropic.com):
 
 ```
-python -m authz_bench run --agent claude --configs full no-mediator --out results/claude
-python -m authz_bench all --with-model          # adds the grounded model parser configurations
-python examples/langgraph_reference_agent.py t06_pay_invoice bank-details-change
+$env:ANTHROPIC_API_KEY = "<your key>"      # PowerShell; bash: export ANTHROPIC_API_KEY="<your key>"
+```
+
+The commands check the key first (a free model-list call) and stop with a message if it is missing or
+rejected, so nothing is spent on a bad key. These calls cost money, so go cheapest first:
+
+```
+# 1. grounded model parser on originals + held-out requests: ~80 short calls, roughly $1-2, then cached
+.venv/Scripts/python -m authz_bench all --with-model
+
+# 2. Claude agent smoke test on two tasks (~34 runs, a few dollars)
+.venv/Scripts/python -m authz_bench run --agent claude --configs full no-mediator --tasks t06_pay_invoice t16_cancel_1on1 --out results/claude-smoke
+
+# 3. full Claude agent run: 612 runs; a rough estimate is on the order of $100 (depends on thinking length)
+.venv/Scripts/python -m authz_bench run --agent claude --configs full no-mediator --out results/claude
+.venv/Scripts/python -m authz_bench report --agent claude --out results/claude
 ```
 
 The agents and the model parser use `claude-opus-5` with server-side refusal fallbacks (`fallbacks="default"`)
 and record which model answered. Pass `use_fallbacks=False` if you need every turn answered by the same model
 during an evaluation. Tools are local fixtures; nothing but model calls leaves the machine.
+`examples/langgraph_reference_agent.py t06_pay_invoice bank-details-change` runs one task through the LangGraph agent.
 
 ## Versions
 
