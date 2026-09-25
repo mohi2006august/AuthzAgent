@@ -38,6 +38,7 @@ class Profile:
     default_amount_ceiling: float = 0.0
     bulk_limit: int = 20
     sensitive_paths: tuple[str, ...] = field(default=())
+    today: str | None = None  # trusted context: the date relative words ("Friday") resolve against
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> Profile:
@@ -52,6 +53,7 @@ class Profile:
             default_amount_ceiling=float(policy.get("default_amount_ceiling", 0.0)),
             bulk_limit=int(policy.get("bulk_limit", 20)),
             sensitive_paths=tuple(policy.get("sensitive_paths", ())),
+            today=data.get("context", {}).get("today"),
         )
 
     @classmethod

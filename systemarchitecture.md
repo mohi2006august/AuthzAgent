@@ -62,3 +62,19 @@ project and belongs in the report.
 - `derive(request) -> CapabilitySet`
 - `check(capability_set, call) -> Allow | Deny(reason)`
 - `audit(task_id) -> Trail`
+
+## Implementation notes (v2, 2026-09-25)
+
+What was built, and where it extends the design above. Details are in `report/report.md`.
+
+- **Trusted structured state.** The mediator may consult server-authenticated, owner-set metadata. Today that
+  is an event's start time and attendees, used to bind `cancel_event` to the day and people the user named. It
+  never reads free text, so the argument in "Why the mediator is not a model" still holds.
+  Signature: `check(capability_set, call, usage, registry, state)`.
+- **Constraints added:** exact-URL egress (`UrlScope`), event binding (`EventMatch`), and a ceiling per payee
+  (`PairedCeiling`, a grant-level predicate over two arguments).
+- **Escalation** shows the call, the reason code and the irreversible actions already executed (never the agent's
+  justification), and widens minimally into a new grant version.
+- **Intent parser.** Rule-based by default, plus a grounded model parser. The model sees only the trusted request
+  and returns verbatim spans, which are resolved deterministically through the profile and cached.
+- **Budget** is per tool (decided from the evaluation).

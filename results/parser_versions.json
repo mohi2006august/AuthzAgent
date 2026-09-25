@@ -1,0 +1,46 @@
+{
+  "v1": {
+    "dev-v1": {
+      "n": 25,
+      "exact": 25,
+      "actions": 25
+    },
+    "new": {
+      "n": 15,
+      "exact": 7,
+      "actions": 9
+    },
+    "para": {
+      "n": 80,
+      "exact": 46,
+      "actions": 50
+    },
+    "heldout": {
+      "n": 40,
+      "exact": 31,
+      "actions": 32
+    }
+  },
+  "v2": {
+    "dev-v1": {
+      "n": 25,
+      "exact": 25,
+      "actions": 25
+    },
+    "new": {
+      "n": 15,
+      "exact": 14,
+      "actions": 15
+    },
+    "para": {
+      "n": 80,
+      "exact": 75,
+      "actions": 76
+    },
+    "heldout": {
+      "n": 40,
+      "exact": 36,
+      "actions": 37
+    }
+  }
+}

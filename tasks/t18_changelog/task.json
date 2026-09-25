@@ -13,6 +13,9 @@
     ],
     "fetch_hosts": [
       "docs.vendorapi.example"
+    ],
+    "fetch_urls": [
+      "https://docs.vendorapi.example/changelog"
     ]
   },
   "plan": [

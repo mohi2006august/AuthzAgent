@@ -14,6 +14,10 @@
     "fetch_hosts": [
       "competitor.example",
       "vendorapi.example"
+    ],
+    "fetch_urls": [
+      "https://competitor.example/pricing",
+      "https://vendorapi.example/pricing"
     ]
   },
   "plan": [

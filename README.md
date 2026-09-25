@@ -6,11 +6,13 @@ that arrive later in the context cannot widen what the agent may do.
 
 * [prd.md](prd.md): requirements · [systemarchitecture.md](systemarchitecture.md): design ·
   [brain.md](brain.md): decisions and state (read first)
-* [report/report.md](report/report.md): technical report · [results/results.md](results/results.md): every table
+* [report/report.md](report/report.md): technical report ·
+  [report/supervisor-brief.md](report/supervisor-brief.md): open decisions ·
+  [results/results.md](results/results.md): every table · [results/v1/](results/v1/results.md): v1 baseline
 
-**Headline** (scripted worst-case agent, 25 tasks, 171 poisoned variants): the unauthorised action rate falls from
-100% to 4.1% at 8% over-restriction. Every remaining miss stays inside the granted scope. Mediation takes 23 µs
-per call at the median.
+**Headline** (v2; scripted worst-case agent; 40 tasks; 266 poisoned variants): the unauthorised action rate
+falls from 100% to 1.5% at 7.5% over-restriction. On held-out requests the figures are 1.9% and 10.0%. Every
+remaining miss stays inside the granted scope. Mediation takes 23 µs per call at the median.
 
 ![frontier](results/frontier.png)
 
@@ -19,11 +21,13 @@ per call at the median.
 ```
 pip install -e ".[eval,dev]"
 python examples/quickstart.py        # derive / check / audit without an agent
-python -m authz_bench all            # generate poisoned variants, run all configurations, write results/
-python -m pytest                     # 76 tests
+python -m authz_bench all            # generate poisoned variants, run 14 configurations, write results/
+python scripts/parser_versions.py    # parser v1 (from git tag) vs v2 accuracy by data split
+python -m pytest                     # 107 tests
 ```
 
-Without installing, prefix commands with `PYTHONPATH=src`.
+Without installing, prefix commands with `PYTHONPATH=src`. A ready environment with every extra
+(including `anthropic` and `langgraph`) is in `.venv`.
 
 ```python
 from authz import Profile, derive, check, ToolCall
@@ -38,43 +42,57 @@ check(capset, ToolCall("transfer", {"to_account": "GB47 MIDL 4015 2237 8811 04",
 
 ```
 src/authz/                 the library
-  parser.py                rule-based intent parser (trusted input only, fails closed)
+  parser.py                rule-based intent parser v2 (trusted input only, fails closed)
+  model_parser.py          grounded model parser: Claude extracts verbatim spans; cached
+  grounding.py             spans -> intent record, only via the request and the profile
   intent.py                intent record
-  derive.py                intent record -> capability set
-  capabilities.py          immutable capability set, tool grants
-  constraints.py           path scopes, allow-lists, ceilings, host allow-lists
+  derive.py                intent record -> capability set (ablation switches for v1 behaviour)
+  capabilities.py          immutable capability set, tool grants, grant-level predicates
+  constraints.py           path scopes, allow-lists, ceilings, URL scopes, event bindings, per-payee ceilings
+  state.py                 trusted structured state (event metadata; no free text)
+  dates.py                 resolving "Friday" against the trusted current date
   mediator.py              check(): the pure enforcement function
-  session.py               per-task mediation, budget usage, escalation loop
-  escalation.py            minimal, versioned widening on user approval
+  session.py               per-task mediation, budget usage, execution history, escalation loop
+  escalation.py            minimal, versioned widening on user approval; prompt shows history
   audit.py                 SQLite audit trail + JSON export
   registry.py              tool schemas, effect classes, scoped arguments
   integrations/            framework-agnostic toolbox, LangGraph tool node
 src/authz_bench/           the evaluation harness
-  world.py                 local mock tool servers over fixtures
+  world.py                 local mock tool servers over fixtures (+ trusted calendar metadata)
   tasks.py                 suite loader, effect matching
   poison.py                poisoning generator
   agents/                  scripted worst-case agent; Claude (Anthropic SDK) and LangGraph agents
   configs.py runner.py     configurations and the run loop
   metrics.py plot.py report.py
-tasks/                     the suite: <id>/task.json, clean/, poisoned/  (authored by scripts/author_suite.py)
-results/                   runs.jsonl, summary.json, results.md, figures
-report/                    technical report
+tasks/                     40 tasks: <id>/task.json, clean/, poisoned/  (authored by scripts/author_suite.py)
+results/                   runs.jsonl, summary.json, results.md, figures; v1/ baseline
+report/                    technical report, supervisor brief
 examples/                  quickstart; LangGraph + Claude reference agent
 tests/
 ```
 
 ## Running with Claude
 
+Needs Anthropic credentials (`ANTHROPIC_API_KEY` or an `ant auth login` profile). None were available when
+these results were produced, so the numbers above come from the scripted agent.
+
 ```
-pip install -e ".[agents]"
-python -m authz_bench run --agent claude --configs full no-mediator --tasks t06_pay_invoice
+python -m authz_bench run --agent claude --configs full no-mediator --out results/claude
+python -m authz_bench all --with-model          # adds the grounded model parser configurations
 python examples/langgraph_reference_agent.py t06_pay_invoice bank-details-change
 ```
 
-Needs Anthropic credentials. The agents use `claude-opus-5` with adaptive thinking and server-side refusal
-fallbacks enabled (`fallbacks="default"`). Pass `use_fallbacks=False` to `ClaudeAgent` if you want every turn
-answered by the same model during an evaluation. Tools are local fixtures; nothing but model calls leaves the
-machine.
+The agents and the model parser use `claude-opus-5` with server-side refusal fallbacks (`fallbacks="default"`)
+and record which model answered. Pass `use_fallbacks=False` if you need every turn answered by the same model
+during an evaluation. Tools are local fixtures; nothing but model calls leaves the machine.
+
+## Versions
+
+| Tag | What |
+|---|---|
+| `v1` | first version, 25 tasks |
+| `v1-expanded` | v1 code on the 40-task suite (the baseline in `results/v1/`) |
+| `v2` | current: failure-mode fixes, parser v2, escalation history, grounded model parser |
 
 ## Scope and ethics
 

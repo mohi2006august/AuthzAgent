@@ -17,6 +17,9 @@
     "fetch_hosts": [
       "status.cloudhost.example"
     ],
+    "fetch_urls": [
+      "https://status.cloudhost.example/incidents/4411"
+    ],
     "actions": [
       {
         "kind": "write_file",

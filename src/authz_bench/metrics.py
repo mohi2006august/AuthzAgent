@@ -166,15 +166,18 @@ def microbenchmark(suite: Suite, repeats: int = 200) -> dict[str, float]:
     """Time check() in isolation over every plan call in the suite."""
     profile = suite.profile
     parser = RuleBasedParser(profile)
+    from .world import World
+
     pairs = []
     for task in suite.tasks:
         capset = derive_from_intent(parser.parse(task.request), profile)
-        pairs += [(capset, ToolCall(s["tool"], s["args"])) for s in task.plan]
+        state = World.from_fixtures(suite.world_fixtures(task.fixtures)).trusted_state()
+        pairs += [(capset, ToolCall(s["tool"], s["args"]), state) for s in task.plan]
     samples = []
     for _ in range(repeats):
-        for capset, call in pairs:
+        for capset, call, state in pairs:
             start = time.perf_counter_ns()
-            check(capset, call)
+            check(capset, call, state=state)
             samples.append((time.perf_counter_ns() - start) / 1000.0)
     samples.sort()
     q = statistics.quantiles(samples, n=1000, method="inclusive")
@@ -197,15 +200,23 @@ def reproducibility(suite: Suite, repeats: int = 5) -> dict[str, Any]:
 
 
 def parser_accuracy(suite: Suite) -> dict[str, Any]:
-    """Compare parsed intent with the hand-labelled intent, on originals and on held-out paraphrases."""
+    """Compare parsed intent with the hand-labelled intent on each data split.
+
+    dev-v1: original requests t01–t25; new: originals t26–t40; para: first paraphrase set;
+    heldout: second held-out set (the only split not used to develop parser v2).
+    """
     parser = RuleBasedParser(suite.profile)
     rows = []
     for task in suite.tasks:
         gold = task.gold().scope()
-        for index, request in enumerate([task.request, *task.paraphrases]):
+        number = int(task.id[1:3])
+        items = [("dev-v1" if number <= 25 else "new", 0, task.request)]
+        items += [("para", i + 1, p) for i, p in enumerate(task.paraphrases)]
+        items += [("heldout", 1 + len(task.paraphrases) + i, h) for i, h in enumerate(task.heldout)]
+        for split, index, request in items:
             parsed = parser.parse(request).scope()
             fields = {k: parsed[k] == gold[k] for k in gold}
-            rows.append({"task": task.id, "request_index": index, "request": request,
+            rows.append({"task": task.id, "split": split, "request_index": index, "request": request,
                          "exact": all(fields.values()), "fields": fields,
                          "parsed_actions": parsed["actions"], "gold_actions": gold["actions"]})
 
@@ -213,10 +224,10 @@ def parser_accuracy(suite: Suite) -> dict[str, Any]:
         sel = list(sel)
         return {"exact": rate(sel, lambda r: r["exact"]).to_json(),
                 **{f: rate(sel, lambda r, f=f: r["fields"][f]).to_json()
-                   for f in ("read_domains", "read_paths", "fetch_hosts", "actions")}}
+                   for f in ("read_domains", "read_paths", "fetch_hosts", "fetch_urls", "actions")}}
 
     return {
-        "original": acc(r for r in rows if r["request_index"] == 0),
-        "paraphrase": acc(r for r in rows if r["request_index"] > 0),
+        "parser": parser.name,
+        **{split: acc(r for r in rows if r["split"] == split) for split in ("dev-v1", "new", "para", "heldout")},
         "rows": rows,
     }
