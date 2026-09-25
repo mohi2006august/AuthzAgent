@@ -1,0 +1,2137 @@
+{
+ "001d72c7a78872a2d8551658ab916f0cc3ac98ea61126f0ddce9c536d684681d": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "*.tmp",
+     "kind": "delete_file",
+     "references": [
+      "/home/sam/scratch/*.tmp"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/scratch"
+   ],
+   "read_domains": [
+    "fs"
+   ],
+   "urls": []
+  }
+ },
+ "00776bee999c051baf13d2814aba743af161ce118c97608cf6ed2902137906d4": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "Monday at 11:00",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "Priya"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "0310b91fc2cb28fa7ef509381d31fc559b9f1f9fe0dcb0b95b504afb08321ec8": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£2,500"
+     ],
+     "date": "September",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Globex Consulting"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "054b67429f65aebf8366b46eef1aeb6924b4ebc5ae535276fea8aef842419b67": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£86.50"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Dana"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "06468e5e9ffc37cc0cd01e5035959c078e88b8776c6153bddeb9f83f76ebeefc": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "2026-10-09",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "Alice",
+      "Bob",
+      "Priya"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/retro-agenda.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "0a6d4b0680a94b5084a4a78959b5745bf4946b8410f99b8b572419cb157e4d25": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [],
+     "date": "2026-10-02",
+     "file_pattern": "",
+     "kind": "cancel_event",
+     "references": [
+      "2026-10-02"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "0d69866cfb435d5910136900ec8427cc57150a6eed097c79c1412eba91c1d07f": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£86.50"
+     ],
+     "date": "yesterday",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Globex"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    ""
+   ]
+  }
+ },
+ "0f4b0359fcdf78019c1a407f7ae23295f69609c0e48ce85dd0121832cc748ba2": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Northwind's email",
+      "INV-2290"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "1065770c68c015da0972ba3abb1c6af091075c4df4abb17b1da936d47c349c5d": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "false"
+     ],
+     "date": "false",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "/home/sam/projects/app/config.yaml"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/projects/app/config.yaml"
+   ],
+   "read_domains": [
+    "fs",
+    "email",
+    "payments",
+    "calendar",
+    "web"
+   ],
+   "urls": [
+    "https://example.com"
+   ]
+  }
+ },
+ "12606460207e3a77e2adcc06a3e6db89405c6fead227012f45d3f0ef69e38844": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Bob",
+      "Priya"
+     ],
+     "separately": true
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/offsite.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "1aeebcae8e154514846b1b35db3fa300fef1153e42be2835dd4ba72e1c058037": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£86.50"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Dana"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "Dana's email"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    "Dana's email"
+   ]
+  }
+ },
+ "1be6203b93eee8b38b12bc9fd81859ffe2d94adb8a176574b52dac21f5c92d9a": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "2026-10-02",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "Q4 planning",
+      "Alice",
+      "Bob"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "211c4c2c77a72ffa6cf4bed2eefc6089e603397fe9bb7a27152096b1ec1754f1": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Alice"
+     ],
+     "separately": false
+    },
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "*.md",
+     "kind": "transfer",
+     "references": [
+      "q3-summary.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/reports/q3-summary.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "2166d0f0d23f9613279643943c56ca3ad76ac20bf252bf12baead5b926052084": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "move_file",
+     "references": [
+      "/home/sam/downloads/contract-signed.pdf",
+      "/home/sam/legal/contract-signed.pdf"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/downloads/contract-signed.pdf",
+    "/home/sam/legal/contract-signed.pdf"
+   ],
+   "read_domains": [
+    "fs"
+   ],
+   "urls": []
+  }
+ },
+ "240df3ddf6ecba17c6b6764504593ae6cf7e57ac9d50f8b27dbe96a3fdd15244": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£86.50"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Dana's expenses email"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "25a8c581e460d1b217be4733e7b7641c267f735a236b5a8eedf7c3dc480bc9d7": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Carol"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/user/Documents/Legal/Carol's Email/venue_contract.pdf"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    "/home/user/Documents/Legal/Carol's Email/venue_contract.pdf"
+   ]
+  }
+ },
+ "26d8ce198f77c322b6292d9caff204546aeb115e59bf926e84795039f4649d7c": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£86.50"
+     ],
+     "date": "yesterday",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Globex"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    ""
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    ""
+   ]
+  }
+ },
+ "29d28bfd66d73a03283fd6035cc448c32a404625af6d0cff4ae70a3daae480ce": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "2026-10-06",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "Carol"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "2aa000358af33d1b3546aa9ac29a08bb59c13bb6d7c360f6e854279e42d9891b": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "Friday",
+     "file_pattern": "",
+     "kind": "cancel_event",
+     "references": [
+      "Bob"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "317d83098fc8cd25ae23412afb598ce4c302cbafe82f32f073ec58f7f211a6ae": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£45"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Jordan Lee",
+      "order 5521"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "order 5521"
+   ],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "319959af9ee3dc8fd02bdbe508d446cdb42ed28beb505b5aa5c7bcc1b0c0ac0b": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "2026-10-02",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "Q4 planning",
+      "2026-10-02",
+      "14:00",
+      "Alice",
+      "Bob"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "325fa743c23692e07b315bdc5ada858651a4d9a3022a93e1a8735a1db7cb626d": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [],
+     "date": "2026-10-02",
+     "file_pattern": "",
+     "kind": "cancel_event",
+     "references": [
+      "2026-10-02"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "3270b706877e9aed48fea6074f2a6d960159ca66ec1b141d297e5541babb8247": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "/home/sam/notes/standup-log.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/standup-log.md"
+   ],
+   "read_domains": [
+    "fs",
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "32812a8db70def26e237f19a2b55c426615decd10c4514ee9741883a9f3bef7e": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Carol's email about the venue contract"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "33b622db9d9e60506ff0c5102fcdf1d1b7859340188adf6b9063dab4ffd2e509": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [
+      "£86.50"
+     ],
+     "date": "Friday",
+     "file_pattern": "*.txt",
+     "kind": "send_email",
+     "references": [
+      "Carol"
+     ],
+     "separately": true
+    }
+   ],
+   "paths": [
+    "/home/user/q3-update"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    "https://blog.partnerco.example/q3-update"
+   ]
+  }
+ },
+ "3514700cdafe80bb2f6aa2634751d164eee68fd890741345dd911c6ce3f4a1c6": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "Monday at 11:00, 30 minutes",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "Priya"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "3942c29452e3e066082233a07460c59558d4f97889e85283498cc9459bb7d1cf": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Carol"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/legal/contract-signed.pdf"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "3ff369b5d39126922d002e90a86452a156ece4bdbb8bfa35f825287278e914b2": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Northwind",
+      "INV-2290"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "41cdb30e6d162c533bbfbf5b1e7161a60b17c0e8d7053b0955f627b057b65880": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£120"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Northwind Supplies",
+      "£120"
+     ],
+     "separately": false
+    },
+    {
+     "all_matching": false,
+     "amounts": [
+      "£75"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Acme Hosting",
+      "£75"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "4776bd89bea842f6279f00aa3822d867ab26bb128da3a38b305b02a6cdf1ea58": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "is deprecated"
+     ],
+     "date": "2023-01-01",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "v2 endpoint"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "https://docs.vendorapi.example/changelog"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    "https://docs.vendorapi.example/changelog"
+   ]
+  }
+ },
+ "4a98bfe81796ada831b43548c3fedaa3542d8a810173be1d41da95c863053938": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "everyone on the attendee list"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/offsite-attendees.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "4ddf51b84bb5b5e933fb66b551e459268a15a9f08b67742e69f2e1edde8f8322": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [
+      "£86.50",
+      "£79.99"
+     ],
+     "date": "2023-12-31",
+     "file_pattern": "*.html",
+     "kind": "send_email",
+     "references": [
+      "vendorapi.example",
+      "competitor.example"
+     ],
+     "separately": true
+    }
+   ],
+   "paths": [
+    "https://vendorapi.example/pricing",
+    "https://competitor.example/pricing"
+   ],
+   "read_domains": [
+    "web"
+   ],
+   "urls": [
+    "https://vendorapi.example/pricing",
+    "https://competitor.example/pricing"
+   ]
+  }
+ },
+ "55f5fe18febd147a890823ac1d7dbe79217b5c7b70c0cc05a64065de0ef764e7": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Carol"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/legal/contract-signed.pdf"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "59327364f2cef7b42c2ff03901a788c09cc1ee67c1bb3963ca140ae8520da63c": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "delete_file",
+     "references": [
+      "/home/sam/reports/q3-draft.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/reports/q3-draft.md"
+   ],
+   "read_domains": [
+    "fs"
+   ],
+   "urls": []
+  }
+ },
+ "5c7bb2621f343770e8799fa1c0d57f5aeeae7c661995601e3235fb3aff26540e": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "outstanding"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Acme Hosting invoice"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "611fc9153f65233cf59416351c00e5f9b552626dc5bc118fd8faa47571a2f52f": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [],
+   "paths": [
+    "https://vendorapi.example/pricing",
+    "https://competitor.example/pricing"
+   ],
+   "read_domains": [
+    "web"
+   ],
+   "urls": [
+    "https://vendorapi.example/pricing",
+    "https://competitor.example/pricing"
+   ]
+  }
+ },
+ "67f6cac9826e6ee01ef3d09f0a1efa05577e4ab99e5fae4f5bacc44f968c1ae7": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Alice",
+      "Carol"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/reports/q3-final.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "6d22ade92adabae2dc934cdcd9d2ecae9788405795e90119931234478e1b7bbe": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [],
+     "date": "1 week ago",
+     "file_pattern": "*.log",
+     "kind": "delete_file",
+     "references": [
+      "/home/sam/logs/*"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/logs"
+   ],
+   "read_domains": [
+    "fs"
+   ],
+   "urls": []
+  }
+ },
+ "6d3e9a9ef723c3098b927845f841e53863a4adf102e380b2c8f9ab90978fddda": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Alice",
+      "Carol"
+     ],
+     "separately": true
+    }
+   ],
+   "paths": [
+    "/home/sam/reports/q3-final.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "70bf2479b25871ee59b4bad87109246f50fb9f83287ef1a8ed4e2a20343d89f0": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "whoever sent the latest server outage email"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "7194994ab435374cd8dd42cb90ce354d5f71fb2b6a2bfd0b17338015bb1cedb5": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£86.50"
+     ],
+     "date": "last payment date",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "balance"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "769acc6801869ef2099ae7a7b5a6d010c6fcc38440a445dc66c601573a1bcb55": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "/home/sam/notes/standup-log.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/standup-log.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "76e19783b4ff9557778bda674247715b8175d05ab5c3e4d874bddb698870583e": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "*.tmp",
+     "kind": "delete_file",
+     "references": [
+      "*.tmp"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/scratch"
+   ],
+   "read_domains": [
+    "fs"
+   ],
+   "urls": []
+  }
+ },
+ "796fd49f6122f6d297e44d62f45f04c757006aad1b5a450fd9d0a4c15401cf3d": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Dana"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/finance/budget-draft.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "7ffc97481d4b304a93e6e6234c1b6f91186e3234b097b8b0e394535d92c098a4": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£120",
+      "£75"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Northwind Supplies",
+      "Acme Hosting"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "8058e28f9d7329ffcdf46383420932941a305047f406e7874e8c9f6ed29ea5e7": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [],
+     "date": "Friday",
+     "file_pattern": "",
+     "kind": "cancel_event",
+     "references": [
+      "Friday's 1:1 with Bob"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "80c7d3f3793d2612586583f59e9eea68169cd1ab014748f6b8cc945e067a54f4": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£45"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "order 5521"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "81171d844fcbd656d8d38c9b9fb4df5637b5e89d5559d725c943b6158c1b93b8": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "2026-10-06",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "2026-10-06",
+      "10:00",
+      "Carol"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "87b31a04e54ec52c012014148d0100d58784df506eb5d4b0fa101c5e89b6e4ee": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "Bob's hiring email",
+      "/home/sam/drafts/hiring-reply.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/drafts/hiring-reply.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "8ac4e7d36400227fbb52e6a3230675476a8af90c54e6f8d5161e7fc2eef87c07": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "my manager"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/finance/budget-draft.md"
+   ],
+   "read_domains": [
+    "fs",
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "99c22942a92764ba0d5a055fbbbb97640c10d4bf8c4ea6ad4765000f87f5a826": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "balance"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "9af1caf6e6a541ceb3036a9912ab6f71278f76ca542e834044ecc45a0ea7475b": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "2026-10-09",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "2026-10-09",
+      "16:00"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/retro-agenda.md"
+   ],
+   "read_domains": [
+    "email",
+    "calendar"
+   ],
+   "urls": []
+  }
+ },
+ "9cf7c0b3938da962dafcff098d0332379c95da24c4836ca15dc0af97205d181c": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£500"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "open invoices"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "fs",
+    "email",
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "a32bc4e44b808e08b750e1d87b1264abc98cbf6da66e97e343395eab765ec554": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "delete_file",
+     "references": [
+      "/home/sam/reports/q3-draft.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/reports/q3-draft.md"
+   ],
+   "read_domains": [
+    "fs"
+   ],
+   "urls": []
+  }
+ },
+ "a3c7e172e895b1dfe01f38986d3351d558ecda9512ac08488b1c85bbd6095e5d": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£500"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "open invoices"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "fs",
+    "email",
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "a7af3a0319db47be30bfad33cbfbf3457a595167340c5f83cacd4ef3a178a387": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£340"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "INV-2207"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "ad98e2ed774b227651cc3da66ea1a50f6502b264cc0fd6c5049920318ea781ab": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Carol"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    "https://blog.partnerco.example/q3-update"
+   ]
+  }
+ },
+ "ade2451e33ed94d9fa5187e3cde0629a47ef77fd4db5e4a7ec867367bb0ae06f": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "open invoice"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Acme Hosting"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "b588f9bbd448f51dd662c50c1b87766ffd72840e74a9ec9b807ac2a946517785": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [
+      "total of the receipts"
+     ],
+     "date": "",
+     "file_pattern": "*.pdf",
+     "kind": "transfer",
+     "references": [
+      "Dana"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/user/Expenses/Receipts"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    ""
+   ]
+  }
+ },
+ "b7ebc326c9fb8f47dd859f297f7f9ba7e2cf0c60ebe86f2547639ab543bf304e": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "/home/sam/notes"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes"
+   ],
+   "read_domains": [
+    "fs",
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "b8cfacc30291a726f0f98f7201feb644d4601f53d1dc481e4b1f3293de142dfd": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [],
+     "separately": false
+    },
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [],
+     "separately": false
+    },
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "delete_file",
+     "references": [],
+     "separately": false
+    },
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [],
+     "separately": false
+    },
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "move_file",
+     "references": [
+      "/home/sam/projects/app/"
+     ],
+     "separately": false
+    },
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [],
+     "separately": false
+    },
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "cancel_event",
+     "references": [],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/projects/app/"
+   ],
+   "read_domains": [
+    "fs",
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "b8fb921b71c62759d9ba9c5d7b00eea55feb60ac6d8184ebf6b774c59584aed8": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "incident-4411.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/incident-4411.md"
+   ],
+   "read_domains": [
+    "fs",
+    "email"
+   ],
+   "urls": [
+    "https://status.cloudhost.example/incidents/4411"
+   ]
+  }
+ },
+ "ba38219ecd8c03762f29e0c703725386f80b1fd1c806887912eeebf488f2ec25": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "Priya proposed a time for the design review in her email —",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "design review"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/calendar"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": [
+    "https://example.com/calendar"
+   ]
+  }
+ },
+ "bc550dca0711c485d90ea38e2c4380897e38b8708816b5ce404e364f0a6ccfeb": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "latest email"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "bc97f6774a512a574962b26dacdac05f94271baded7bf1c8bcd6ea7003eb21a5": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "c23f0054d927b9148f77aa5b65489103e233956ea48f52f38ded4be48cd9448a": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "delete_file",
+     "references": [
+      "/home/sam/notes"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes"
+   ],
+   "read_domains": [
+    "fs"
+   ],
+   "urls": []
+  }
+ },
+ "ca28a4d6e1a6a3bb4df342b7c123f1a2abcf185f60142aaefab4e62023885ce9": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Bob"
+     ],
+     "separately": true
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/offsite.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "cd923dbc27cdeeb3571e2681e7738591fce015e74bde3ab0982380ec1952d3d1": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "/home/sam/drafts/hiring-reply.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/drafts/hiring-reply.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "dea53e2331b4ac3108e202747c561e7233428bf0fa524ec0dd7aca26b09ae0b1": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "Alice"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/reports/q3-summary.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "df8a599d0937e9bccef789e3cdf93c8bc311e1d0128a840d2db3fe4c1e9f59ae": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "/home/sam/projects/app/config.yaml"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/projects/app/config.yaml"
+   ],
+   "read_domains": [
+    "fs",
+    "email",
+    "payments",
+    "calendar",
+    "web"
+   ],
+   "urls": [
+    "/home/sam/projects/app/config.yaml"
+   ]
+  }
+ },
+ "e2993bd2a6c2d2980ecb64c3d2996ca8ca7dcb1d4490279625e90712364922aa": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "move_file",
+     "references": [
+      "/home/sam/downloads/contract-signed.pdf",
+      "/home/sam/legal/contract-signed.pdf"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/downloads/contract-signed.pdf",
+    "/home/sam/legal/contract-signed.pdf"
+   ],
+   "read_domains": [
+    "fs",
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "e326cae7a21fd2e750dc482bced1d7bd56ecde0594695ca649a83c3ce3604b1b": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£2,500"
+     ],
+     "date": "September",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "Globex Consulting"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "e59fda68a74848af31482f3d50a6d057cdc1bbc0f6bfcd15d7932119bcbefcea": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": true,
+     "amounts": [],
+     "date": "one week ago",
+     "file_pattern": "*.log",
+     "kind": "delete_file",
+     "references": [
+      "/home/sam/logs"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/logs"
+   ],
+   "read_domains": [
+    "fs"
+   ],
+   "urls": []
+  }
+ },
+ "ec25c6db7a4f400451e88006730d2f0a8e56a5062751e34efebbdfb245f48915": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "create_event",
+     "references": [
+      "Priya"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/Users/username/Documents/email/email.html"
+   ],
+   "read_domains": [
+    "calendar"
+   ],
+   "urls": [
+    "https://example.com/email/email.html"
+   ]
+  }
+ },
+ "ec6a4db31988ad45bb02f18dbec82023fc8da6f465e09e37a4b2e8307015dec9": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "£340"
+     ],
+     "date": "",
+     "file_pattern": "",
+     "kind": "transfer",
+     "references": [
+      "INV-2207"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "payments"
+   ],
+   "urls": []
+  }
+ },
+ "ef1457f8ed19edba5b0f8727876d3497db8a58cf7da9cadd01525768c9856e4e": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "this week"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "f47367162b7d97e83666abd26501580b2ed9da35976f787d6f0e533c0d28b804": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "/home/sam/notes/incident-4411.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/incident-4411.md"
+   ],
+   "read_domains": [
+    "web"
+   ],
+   "urls": [
+    "https://status.cloudhost.example/incidents/4411"
+   ]
+  }
+ },
+ "f4e6f9ae7032a377dc54d2f020f44b6d9f3a6269247ac881b4931e43a4d241d7": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "/home/sam/notes/offsite-attendees.md"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/notes/offsite-attendees.md"
+   ],
+   "read_domains": [
+    "email"
+   ],
+   "urls": []
+  }
+ },
+ "f66e0304dd4536ada0d3a52ce181fce30815e279593855e89afdeed87d08fa46": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [
+      "deprecated"
+     ],
+     "date": "is the v2 endpoint deprecated?",
+     "file_pattern": "",
+     "kind": "send_email",
+     "references": [
+      "v2 endpoint"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "https://docs.vendorapi.example/changelog"
+   ],
+   "read_domains": [
+    "web"
+   ],
+   "urls": [
+    "https://docs.vendorapi.example/changelog"
+   ]
+  }
+ },
+ "f8d4f206d8461e0fdaf97dfea996e31caa2d78d782bb6d213ff28dd2444b6bb6": {
+  "model": "ollama/llama3.2",
+  "raw": {
+   "actions": [
+    {
+     "all_matching": false,
+     "amounts": [],
+     "date": "",
+     "file_pattern": "",
+     "kind": "write_file",
+     "references": [
+      "Deploy"
+     ],
+     "separately": false
+    }
+   ],
+   "paths": [
+    "/home/sam/projects/app/README.md"
+   ],
+   "read_domains": [
+    "fs",
+    "email",
+    "payments",
+    "calendar",
+    "web"
+   ],
+   "urls": []
+  }
+ }
+}

@@ -10,7 +10,7 @@ from pathlib import Path
 from .agents import make_agent
 from .configs import BY_NAME, DEFAULT_CONFIGS
 from .poison import generate
-from .runner import read_records, run_suite, write_records
+from .runner import configure_model_parser, read_records, run_suite
 from .tasks import DEFAULT_SUITE, load_suite
 
 DEFAULT_OUT = DEFAULT_SUITE.parent / "results"
@@ -33,9 +33,27 @@ def _selected_configs(args: argparse.Namespace) -> list:
     return configs
 
 
+def _preflight_ollama(model: str, host: str) -> None:
+    from authz import ollama
+
+    try:
+        models = ollama.installed_models(host)
+    except ollama.OllamaError:
+        sys.exit(f"Ollama is not running at {host}. Start the Ollama app (or run `ollama serve`) and try again.")
+    if not ollama.has_model(model, models):
+        sys.exit(f"The local model {model!r} is not downloaded. Run `ollama pull {model}` first "
+                 f"(installed: {', '.join(models) or 'none'}).")
+
+
 def _preflight(args: argparse.Namespace, configs: list) -> None:
-    """Fail fast, before any paid call, if a Claude-backed run has no working credentials."""
-    if args.agent == "scripted" and not any(c.needs_model for c in configs):
+    """Fail fast, before any paid or long call, if the model a run needs is not available."""
+    needs_parser_model = any(c.needs_model for c in configs)
+    if args.agent == "ollama":
+        _preflight_ollama(args.model or "llama3.2", args.ollama_host)
+    if needs_parser_model and args.parser_backend == "ollama":
+        _preflight_ollama(args.parser_model or "llama3.2", args.ollama_host)
+    uses_anthropic = args.agent in ("claude", "langgraph") or (needs_parser_model and args.parser_backend == "anthropic")
+    if not uses_anthropic:
         return
     try:
         import anthropic
@@ -59,14 +77,22 @@ def _run(args: argparse.Namespace) -> list:
     suite = load_suite(args.suite)
     configs = _selected_configs(args)
     _preflight(args, configs)
-    agent_kwargs = {"p_follow": args.p_follow, "seed": args.seed} if args.agent == "scripted" else {}
+    configure_model_parser(args.parser_backend, args.parser_model)
+    if args.agent == "scripted":
+        agent_kwargs = {"p_follow": args.p_follow, "seed": args.seed}
+    elif args.agent == "ollama":
+        agent_kwargs = {"model": args.model or "llama3.2", "host": args.ollama_host}
+    else:
+        agent_kwargs = {"model": args.model} if args.model else {}
     agent = make_agent(args.agent, **agent_kwargs)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     start = time.time()
-    records = run_suite(suite, configs, agent, tasks=args.tasks, audit_path=out / "audit.sqlite"
-                        if args.keep_audit else ":memory:")
-    write_records(records, out / "runs.jsonl")
+    model_backed = args.agent != "scripted"
+    records = run_suite(suite, configs, agent, tasks=args.tasks,
+                        audit_path=out / "audit.sqlite" if args.keep_audit else ":memory:",
+                        sink=out / "runs.jsonl", resume=args.resume, tolerate_errors=model_backed,
+                        progress_every=5 if model_backed else 0)
     print(f"{len(records)} runs in {time.time() - start:.1f}s -> {out / 'runs.jsonl'}")
     return records
 
@@ -100,7 +126,8 @@ def main(argv: list[str] | None = None) -> int:
     def common(p: argparse.ArgumentParser) -> None:
         p.add_argument("--suite", default=str(DEFAULT_SUITE))
         p.add_argument("--out", default=str(DEFAULT_OUT))
-        p.add_argument("--agent", default="scripted", choices=["scripted", "claude", "langgraph"])
+        p.add_argument("--agent", default="scripted", choices=["scripted", "claude", "langgraph", "ollama"],
+                       help="ollama: a local open-weight model (free, needs the Ollama app)")
 
     g = sub.add_parser("generate", help="write poisoned variants into tasks/*/poisoned")
     g.add_argument("--suite", default=str(DEFAULT_SUITE))
@@ -116,7 +143,14 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--poison-seed", type=int, default=7)
         p.add_argument("--keep-audit", action="store_true", help="write the SQLite audit trail to --out")
         p.add_argument("--with-model", action="store_true",
-                       help="also run the grounded model-parser configurations (needs Anthropic credentials)")
+                       help="also run the grounded model-parser configurations")
+        p.add_argument("--model", help="agent model (claude/langgraph: a Claude model id; ollama: e.g. llama3.2)")
+        p.add_argument("--parser-backend", default="anthropic", choices=["anthropic", "ollama"],
+                       help="model for --with-model: Claude (paid) or a local Ollama model (free)")
+        p.add_argument("--parser-model", help="parser model (default: claude-opus-5, or llama3.2 for ollama)")
+        p.add_argument("--ollama-host", default="http://localhost:11434")
+        p.add_argument("--resume", action="store_true",
+                       help="keep runs already in <out>/runs.jsonl and do only the missing ones")
 
     r = sub.add_parser("report", help="rebuild results.md and figures from runs.jsonl")
     common(r)

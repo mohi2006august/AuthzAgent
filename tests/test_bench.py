@@ -126,3 +126,26 @@ def test_preflight_skips_scripted_runs_and_explains_missing_credentials(monkeypa
         cli._preflight(claude, cli._selected_configs(claude))
     assert "No Anthropic credentials" in str(exc.value)
     assert sys.modules["anthropic"] is anthropic
+
+
+def test_runs_are_streamed_to_disk_and_resumable(suite, tmp_path):
+    sink = tmp_path / "runs.jsonl"
+    first = run_suite(suite, [BY_NAME["full"]], ScriptedAgent(), tasks=["t06_pay_invoice"], sink=sink)
+    assert len(sink.read_text(encoding="utf-8").splitlines()) == len(first)
+    lines = sink.read_text(encoding="utf-8").splitlines()
+    sink.write_text("\n".join(lines[:3]) + "\n", encoding="utf-8")  # simulate a crash after three runs
+    resumed = run_suite(suite, [BY_NAME["full"]], ScriptedAgent(), tasks=["t06_pay_invoice"], sink=sink, resume=True)
+    assert len(resumed) == len(first)
+    assert len(sink.read_text(encoding="utf-8").splitlines()) == len(first)
+
+
+def test_model_failures_are_skipped_when_tolerated(suite, tmp_path):
+    class Flaky(ScriptedAgent):
+        def run(self, task, variant, toolbox, request):
+            if variant is not None:
+                raise RuntimeError("model unreachable")
+            return super().run(task, variant, toolbox, request)
+
+    records = run_suite(suite, [BY_NAME["full"]], Flaky(), tasks=["t06_pay_invoice"], sink=tmp_path / "r.jsonl",
+                        tolerate_errors=True)
+    assert [r.poisoned for r in records] == [False]

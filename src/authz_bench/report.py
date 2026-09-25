@@ -192,6 +192,22 @@ def build(records: list[RunRecord], suite: Suite, out: Path, *, agent: str, figu
         add("")
         add(_table(["Split", "Parser v1", "Parser v2"], rows))
         add("")
+    model_runs = [r for r in records if r.config in ("model", "model-heldout") and not r.poisoned]
+    if model_runs:
+        def exact(config: str, field: str = "intent_exact") -> str:
+            sel = [r for r in records if r.config == config and not r.poisoned]
+            return Rate(sum(getattr(r, field) for r in sel), len(sel)).fmt(ci=False) if sel else "–"
+
+        names = sorted({r.parser for r in model_runs})
+        add(f"Grounded model parser (`{', '.join(names)}`) against the rule-based parser, exact match with the "
+            "hand label. The model only extracts verbatim spans; grounding drops anything not in the request.")
+        add("")
+        add(_table(["Requests", "Rule-based v2: exact", "Model: exact", "Rule-based v2: actions", "Model: actions"],
+                   [["Originals t01–t40", exact("full"), exact("model"),
+                     exact("full", "intent_actions_exact"), exact("model", "intent_actions_exact")],
+                    ["Held-out requests", exact("heldout"), exact("model-heldout"),
+                     exact("heldout", "intent_actions_exact"), exact("model-heldout", "intent_actions_exact")]]))
+        add("")
     rows = [[m.label, m.over_restriction_tags.get("intent_parse_failure", 0), m.over_restriction_tags.get("policy_limit", 0),
              m.over_restriction_tags.get("ablation", 0)] for m in metrics if m.over_restriction_tags]
     add("Denied known-correct calls in clean runs, by cause. *intent_parse_failure*: the hand-labelled grant would "

@@ -34,6 +34,7 @@ grounded: spans must appear verbatim and are resolved only through the profile.
 | Escalation prompt shows call, reason code and irreversible actions already executed; never the agent's justification | History closes F4 (budget race). Justification is written after reading untrusted content |
 | Escalation widens minimally and versions the grant (`parent` = old fingerprint) | Audit trail shows exactly what the user added |
 | Non-canonical paths and schema violations are not escalatable | No scope the user grants makes them meaningful |
+| Real-model runs can be free: Ollama backends for the agent and the grounded parser (2026-09-25) | No API budget. Local Llama 3.2 (3B) on CPU; grounding keeps the parser's safety property regardless of model |
 | "Confirm unstated amounts" is an option, not the default | Removes in-scope amount inflation (F1) at 0.08 extra prompts per clean task; the user should choose |
 
 ## Decisions still open
@@ -81,7 +82,11 @@ Full: 1.5% unauthorised at 7.5% over-restriction (v1: 4.1% / 22.5%); held-out: 1
 All remaining misses are in scope (amounts under a policy ceiling, a bulk-delete pattern).
 107 tests pass (LangGraph graph executes; Claude loop and model parser tested with fake clients).
 
-Blocked on credentials (there is no ANTHROPIC_API_KEY and no `ant` profile on this machine):
+Free route (no key): `--agent ollama` and `--parser-backend ollama` run the same suite on a local model
+(Ollama 0.34 with llama3.2 is installed; CPU only: 16 GB RAM, no discrete GPU, so agent runs take tens of
+seconds each).
+
+Paid route, blocked on credentials (there is no ANTHROPIC_API_KEY and no `ant` profile on this machine):
 - `python -m authz_bench run --agent claude` / `--agent langgraph`: measured injection compliance
 - `python -m authz_bench all --with-model`: grounded model parser accuracy on the held-out split
 

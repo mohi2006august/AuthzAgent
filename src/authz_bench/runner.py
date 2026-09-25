@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
@@ -46,6 +47,9 @@ class RunRecord:
     completed: bool  # all expected effects happened
     unauthorised: bool  # some effect happened that the task did not call for
     over_restricted: bool  # some known-correct call was finally denied
+    parser: str = ""  # which parser produced the intent ("gold" for hand-labelled)
+    intent_exact: bool = False  # parsed intent matched the hand label for this request
+    intent_actions_exact: bool = False  # ... on the irreversible actions alone
     attack_attempted: int = 0
     attack_executed: int = 0
     adversarial_denials: int = 0
@@ -63,17 +67,24 @@ class RunRecord:
     steps: list[dict[str, Any]] = field(default_factory=list)
 
 
-_PARSERS: dict[tuple[int, str], Any] = {}
+_PARSERS: dict[tuple[int, str, str, str | None], Any] = {}
 MODEL_CACHE = Path(__file__).resolve().parents[2] / ".cache" / "model_parses.json"
+MODEL_PARSER: dict[str, str | None] = {"backend": "anthropic", "model": None}
+
+
+def configure_model_parser(backend: str, model: str | None = None) -> None:
+    """Which model the "model" configurations parse with: "anthropic" (Claude) or "ollama" (local, free)."""
+    MODEL_PARSER.update(backend=backend, model=model)
 
 
 def make_parser(config: Config, suite: Suite) -> Any:
-    key = (id(suite), config.parser)
+    key = (id(suite), config.parser, str(MODEL_PARSER["backend"]), MODEL_PARSER["model"])
     if key not in _PARSERS:
         if config.parser == "model":
             from authz.model_parser import GroundedModelParser
 
-            _PARSERS[key] = GroundedModelParser(suite.profile, cache_path=MODEL_CACHE)
+            _PARSERS[key] = GroundedModelParser(suite.profile, cache_path=MODEL_CACHE,
+                                                backend=str(MODEL_PARSER["backend"]), model=MODEL_PARSER["model"])
         else:
             _PARSERS[key] = RuleBasedParser(suite.profile)
     return _PARSERS[key]
@@ -177,6 +188,8 @@ def run_one(suite: Suite, task: Task, variant: Variant | None, config: Config, a
         template=variant.template if variant else None,
         request=request, request_index=request_index,
         intent_digest=intent.digest(), capset_fingerprint=capset.fingerprint(),
+        parser=intent.parser, intent_exact=intent.scope() == task.gold(request).scope(),
+        intent_actions_exact=intent.scope()["actions"] == task.gold(request).scope()["actions"],
         success=not extra and not missing, completed=not missing, unauthorised=bool(extra),
         over_restricted=False,
         escalations=len(trail.escalations),
@@ -237,24 +250,72 @@ def requests_for(task: Task, config: Config) -> list[tuple[int, str]]:
     return [(0, task.request)]
 
 
+def run_key(config: str, task_id: str, request_index: int, variant_id: str | None) -> str:
+    return f"{config}/{task_id}/r{request_index}/{variant_id or 'clean'}"
+
+
 def run_suite(suite: Suite, configs: Iterable[Config], agent: Any, *, tasks: Iterable[str] | None = None,
               include_clean: bool = True, include_poisoned: bool = True,
-              audit_path: str | Path = ":memory:") -> list[RunRecord]:
+              audit_path: str | Path = ":memory:", sink: str | Path | None = None, resume: bool = False,
+              tolerate_errors: bool = False, progress_every: int = 0) -> list[RunRecord]:
+    """Run every (configuration, task, request, variant).
+
+    sink             append each record to this JSONL file as soon as it finishes, so a long run
+                     cannot be lost to a crash
+    resume           keep the records already in ``sink`` and skip those runs
+    tolerate_errors  for model-backed agents: a run whose model call fails is reported and skipped
+                     (not recorded), so ``resume`` retries it later
+    progress_every   print progress and an ETA every N new runs
+    """
     selected = [t for t in suite.tasks if tasks is None or t.id in set(tasks)]
-    store = AuditStore(audit_path)
-    records: list[RunRecord] = []
+    plan: list[tuple[Config, Task, int, str, Variant | None]] = []
     for config in configs:
         for task in selected:
             for request_index, request in requests_for(task, config):
-                runs: list[Variant | None] = []
-                if include_clean:
-                    runs.append(None)
-                if include_poisoned:
-                    runs.extend(task.variants)
-                for variant in runs:
-                    run_id = f"{config.name}/{task.id}/r{request_index}/{variant.id if variant else 'clean'}"
-                    records.append(run_one(suite, task, variant, config, agent, request, request_index, store, run_id))
+                variants: list[Variant | None] = ([None] if include_clean else []) + (
+                    list(task.variants) if include_poisoned else [])
+                plan += [(config, task, request_index, request, v) for v in variants]
+
+    records: list[RunRecord] = []
+    done: set[str] = set()
+    if sink is not None and resume and Path(sink).exists():
+        wanted = {run_key(c.name, t.id, i, v.id if v else None) for c, t, i, _, v in plan}
+        for r in read_records(sink):
+            key = run_key(r.config, r.task_id, r.request_index, r.variant_id)
+            if key in wanted and key not in done:
+                records.append(r)
+                done.add(key)
+    if sink is not None and not resume:
+        Path(sink).write_text("", encoding="utf-8")
+
+    todo = [item for item in plan if run_key(item[0].name, item[1].id, item[2], item[4].id if item[4] else None)
+            not in done]
+    if progress_every and done:
+        print(f"resuming: {len(done)} runs already recorded, {len(todo)} to go", flush=True)
+    store = AuditStore(audit_path)
+    failures = 0
+    started = time.time()
+    for n, (config, task, request_index, request, variant) in enumerate(todo, 1):
+        run_id = run_key(config.name, task.id, request_index, variant.id if variant else None)
+        try:
+            record = run_one(suite, task, variant, config, agent, request, request_index, store, run_id)
+        except Exception as exc:  # noqa: BLE001 - only when the caller asked to tolerate model failures
+            if not tolerate_errors:
+                raise
+            failures += 1
+            print(f"run failed, skipped (resume retries it): {run_id}: {type(exc).__name__}: {exc}", flush=True)
+            continue
+        records.append(record)
+        if sink is not None:
+            with open(sink, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(asdict(record), ensure_ascii=False) + "\n")
+        if progress_every and (n % progress_every == 0 or n == len(todo)):
+            elapsed = time.time() - started
+            eta = elapsed / n * (len(todo) - n)
+            print(f"{n}/{len(todo)} runs, {elapsed / 60:.1f} min elapsed, about {eta / 60:.0f} min left", flush=True)
     store.close()
+    if failures:
+        print(f"{failures} run(s) failed; run again with --resume to retry them", flush=True)
     return records
 
 

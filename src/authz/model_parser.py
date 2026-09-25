@@ -21,9 +21,10 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
-from .grounding import ground
+from . import ollama
+from .grounding import GROUNDING_VERSION, ground
 from .intent import IntentRecord
 from .profile import Profile
 from .types import canonical_json
@@ -101,15 +102,32 @@ class ParseCache:
 
 
 class GroundedModelParser:
-    def __init__(self, profile: Profile, *, model: str = MODEL, client: Any = None,
-                 cache_path: str | Path | None = None, use_fallbacks: bool = True, effort: str = "medium"):
+    """``backend="anthropic"`` calls Claude; ``backend="ollama"`` calls a local open-weight model (free).
+
+    Grounding is identical for both, so the safety property (never wider than the request)
+    does not depend on which model parses.
+    """
+
+    def __init__(self, profile: Profile, *, model: str | None = None, client: Any = None,
+                 cache_path: str | Path | None = None, use_fallbacks: bool = True, effort: str = "medium",
+                 backend: str = "anthropic", host: str = ollama.DEFAULT_HOST,
+                 post: Callable[..., dict[str, Any]] | None = None):
+        if backend not in ("anthropic", "ollama"):
+            raise ValueError(f"unknown backend {backend!r}")
         self.profile = profile
-        self.model = model
+        self.backend = backend
+        self.model = model or (MODEL if backend == "anthropic" else "llama3.2")
         self._client = client
         self.cache = ParseCache(cache_path)
         self.use_fallbacks = use_fallbacks
         self.effort = effort
-        self.name = f"model:{model}/{PROMPT_VERSION}"
+        self.host = host
+        self._post = post or ollama.post
+        prefix = "" if backend == "anthropic" else "ollama/"
+        # the cache is keyed on what the model saw (prompt version + model), not on the grounding
+        # version, so a grounding fix re-applies to cached outputs without new model calls
+        self._cache_id = f"model:{prefix}{self.model}/{PROMPT_VERSION}"
+        self.name = f"{self._cache_id}+g{GROUNDING_VERSION}"
         self._profile_digest = hashlib.sha256(canonical_json({
             "contacts": [(c.name, c.email, c.aliases) for c in profile.contacts],
             "payees": [(p.name, p.account, p.aliases) for p in profile.payees],
@@ -117,7 +135,7 @@ class GroundedModelParser:
         }).encode()).hexdigest()[:16]
 
     def _key(self, request: str) -> str:
-        return hashlib.sha256(f"{PROMPT_VERSION}|{self.model}|{self._profile_digest}|{request}".encode()).hexdigest()
+        return hashlib.sha256(f"{self._cache_id}|{self._profile_digest}|{request}".encode()).hexdigest()
 
     def client(self) -> Any:
         if self._client is None:
@@ -127,6 +145,8 @@ class GroundedModelParser:
         return self._client
 
     def _call(self, request: str) -> dict[str, Any]:
+        if self.backend == "ollama":
+            return self._call_ollama(request)
         kwargs: dict[str, Any] = {
             "model": self.model,
             "max_tokens": 4000,
@@ -146,6 +166,27 @@ class GroundedModelParser:
         if text is None:
             raise ModelParseError("no text block in the model response")
         return {"raw": json.loads(text), "model": getattr(response, "model", self.model)}
+
+    def _call_ollama(self, request: str) -> dict[str, Any]:
+        body = {
+            "model": self.model,
+            "stream": False,
+            "format": SCHEMA,  # Ollama constrains decoding to this JSON schema
+            "options": {"temperature": 0, "seed": 0},
+            "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": request}],
+        }
+        try:
+            response = self._post(self.host, "/api/chat", body)
+        except ollama.OllamaError as exc:
+            raise ModelParseError(str(exc)) from exc
+        text = (response.get("message") or {}).get("content", "")
+        try:
+            raw = json.loads(text)
+        except ValueError as exc:
+            raise ModelParseError("the model did not return valid JSON") from exc
+        if not isinstance(raw, dict):
+            raise ModelParseError("the model did not return a JSON object")
+        return {"raw": raw, "model": f"ollama/{response.get('model', self.model)}"}
 
     def parse(self, request: str) -> IntentRecord:
         key = self._key(request)

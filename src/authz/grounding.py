@@ -12,6 +12,12 @@ amount. Grounding bounds the damage deterministically:
 
 So the most a model error can do is pick the wrong one of the things the user
 actually named. It can never introduce a new recipient, payee, file or host.
+
+Grounding version 2 also requires evidence for each *action*, not just for its
+targets. A local 3B model invented a "cancel an event" action for a request that
+only asked to edit a file. With no targets, v1 grounding granted that as an
+unqualified cancellation. Now an action with no grounded reference, path, amount
+or date, and no bulk word ("all", "every") in the request, is dropped.
 """
 
 from __future__ import annotations
@@ -30,6 +36,8 @@ _PATTERN = re.compile(r"^\*(?:\.[A-Za-z0-9]{1,8})?$")
 _DOMAINS = ("fs", "email", "payments", "calendar", "web")
 _PRONOUNS = {"him", "her", "them", "they", "he", "she", "me", "us"}
 _DROP_PREFIXES = ("the ", "my ", "our ")
+_BULK_WORDS = {"all", "every", "everything", "any"}
+GROUNDING_VERSION = 2
 
 
 def _squash(text: str) -> str:
@@ -94,29 +102,38 @@ def ground(raw: Mapping[str, Any], request: str, profile: Profile, parser: str) 
         notes.append(f"dropped {kind} {value!r}: not in the request")
         return False
 
+    def items(value: Any) -> list:
+        return value if isinstance(value, list) else []
+
     paths = []
-    for p in raw.get("paths", []):
+    for p in items(raw.get("paths")):
         if isinstance(p, str) and verbatim("path", p) and (c := resolve_path(p, profile)):
             paths.append(c)
-    urls = [u for u in raw.get("urls", []) if isinstance(u, str) and verbatim("url", u) and HostAllowList.host_of(u)]
-    domains = {d for d in raw.get("read_domains", []) if d in _DOMAINS}
+    urls = [u for u in items(raw.get("urls")) if isinstance(u, str) and verbatim("url", u) and HostAllowList.host_of(u)]
+    domains = {d for d in items(raw.get("read_domains")) if isinstance(d, str) and d in _DOMAINS}
     if paths:
         domains.add("fs")
     if urls:
         domains.add("web")
 
     actions: list[Action] = []
-    for a in raw.get("actions", []):
+    for a in items(raw.get("actions")):
+        if not isinstance(a, dict):
+            continue
         kind = a.get("kind")
-        refs = [r for r in a.get("references", []) if isinstance(r, str) and r.strip()]
+        refs = [r for r in items(a.get("references")) if isinstance(r, str) and r.strip()]
         refs = [r for r in refs if _squash(r) in _PRONOUNS or verbatim("reference", r)]
         amounts = []
-        for text in a.get("amounts", []):
+        for text in items(a.get("amounts")):
             if isinstance(text, str) and verbatim("amount", text):
                 amounts += [float(n.replace(",", "")) for n in _NUMBER.findall(text)]
-        date_text = a.get("date") or ""
+        date_text = a.get("date") if isinstance(a.get("date"), str) else ""
         dates = resolve_dates(date_text, profile.today) if date_text and verbatim("date", date_text) else []
-        bulk = bool(a.get("all_matching"))
+        bulk = bool(a.get("all_matching")) and bool(set(re.findall(r"[a-z]+", request.lower())) & _BULK_WORDS)
+        if not refs and not amounts and not dates and not bulk and kind in (
+                "send_email", "create_event", "transfer", "cancel_event"):
+            notes.append(f"dropped {kind}: nothing in the request grounds it")
+            continue
 
         if kind in ("send_email", "create_event"):
             resolved = [resolve_person(r, profile) for r in refs]
@@ -150,7 +167,7 @@ def ground(raw: Mapping[str, Any], request: str, profile: Profile, parser: str) 
                 else:
                     notes.append("move without source and destination ignored")
                 continue
-            pattern = a.get("file_pattern") or ""
+            pattern = a.get("file_pattern") if isinstance(a.get("file_pattern"), str) else ""
             if kind == "delete_file" and bulk and targets:
                 ext = pattern[2:] if pattern.startswith("*.") else ""
                 if not _PATTERN.match(pattern) or (ext and not appears(ext, request)):

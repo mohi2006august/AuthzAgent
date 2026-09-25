@@ -14,4 +14,8 @@ def make_agent(name: str, **kwargs):
         from .llm import LangGraphClaudeAgent
 
         return LangGraphClaudeAgent(**kwargs)
+    if name == "ollama":
+        from .local import OllamaAgent
+
+        return OllamaAgent(**kwargs)
     raise ValueError(f"unknown agent {name!r}")

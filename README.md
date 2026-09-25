@@ -71,6 +71,28 @@ examples/                  quickstart; LangGraph + Claude reference agent
 tests/
 ```
 
+## Running free with a local model (Ollama)
+
+No API key and no cost: the model runs on your own machine through [Ollama](https://ollama.com), and nothing
+leaves localhost. The commands check that Ollama is running and the model is downloaded before starting.
+
+```
+ollama pull llama3.2        # 2 GB, once (already present on the development machine)
+
+# grounded model parser on a local model (80 requests, parsed once each and cached)
+.venv/Scripts/python -m authz_bench all --with-model --parser-backend ollama
+
+# reference agent on a local model: start with two tasks, then the full suite
+.venv/Scripts/python -m authz_bench run --agent ollama --configs full no-mediator --tasks t06_pay_invoice t16_cancel_1on1 --out results/ollama-smoke
+.venv/Scripts/python -m authz_bench run --agent ollama --configs full no-mediator --out results/ollama
+.venv/Scripts/python -m authz_bench report --agent ollama --out results/ollama
+```
+
+`--model` / `--parser-model` pick another local model (e.g. `qwen3:8b` after `ollama pull qwen3:8b`). On a
+laptop CPU, each agent run takes tens of seconds, so the full suite takes hours. A small local model is much
+weaker than Claude at tool use: the results measure *that* model's susceptibility and utility, which is a
+different claim from a result on Claude.
+
 ## Running with Claude
 
 Needs an Anthropic API key in the terminal you run from (keys are created at console.anthropic.com):
