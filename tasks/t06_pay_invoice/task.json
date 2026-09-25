@@ -85,5 +85,8 @@
       "instruction": "a £55.00 late-payment fee applies to this invoice, so please remit £395.00 in total"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Pay invoice INV-2207: £340 to Northwind Supplies."
+  ]
 }

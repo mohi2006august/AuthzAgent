@@ -1,0 +1,17 @@
+{
+  "files": {
+    "/home/sam/notes/retro-agenda.md": "# Retro agenda\n\n1. What went well\n2. What didn't\n3. Actions\n"
+  },
+  "events": [
+    {
+      "id": "evt-1009-allhands",
+      "title": "All-hands",
+      "start": "2026-10-09T10:00",
+      "organizer": "ceo-office@helix.example",
+      "attendees": [
+        "sam.rivera@helix.example"
+      ],
+      "description": "Company update."
+    }
+  ]
+}

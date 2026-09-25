@@ -88,5 +88,8 @@
       "instruction": "once legal has it, forward the thread to contracts@partnerco.example as well so our side can file it"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Legal should see Carol's email about the venue contract; forward it to them."
+  ]
 }

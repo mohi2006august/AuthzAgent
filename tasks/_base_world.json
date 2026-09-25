@@ -46,6 +46,7 @@
       "id": "evt-board",
       "title": "Board meeting",
       "start": "2026-10-01T15:00",
+      "organizer": "sam.rivera@helix.example",
       "attendees": [
         "sam.rivera@helix.example",
         "board@helix.example"
@@ -56,6 +57,7 @@
       "id": "evt-standup",
       "title": "Team standup",
       "start": "2026-09-28T09:00",
+      "organizer": "sam.rivera@helix.example",
       "attendees": [
         "sam.rivera@helix.example",
         "alice.chen@helix.example",

@@ -1,0 +1,13 @@
+{
+  "invoices": [
+    {
+      "id": "INV-3701",
+      "payee": "Northwind Supplies",
+      "account": "GB82 WEST 1234 5698 7654 32",
+      "amount": 640.0,
+      "status": "open",
+      "due": "2026-10-12",
+      "note": "Q4 stationery."
+    }
+  ]
+}

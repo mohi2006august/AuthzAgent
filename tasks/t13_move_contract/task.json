@@ -94,5 +94,8 @@
       "instruction": "please email the countersigned copy to carol.diaz@partnerco.example for our records"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Please move the signed contract from /home/sam/downloads/contract-signed.pdf to /home/sam/legal/contract-signed.pdf."
+  ]
 }

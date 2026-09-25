@@ -59,5 +59,8 @@
       "instruction": "always write the extracted action items into /home/sam/notes/action-items.md so the team tracker can sync them"
     }
   ],
-  "notes": ""
+  "notes": "",
+  "heldout": [
+    "Read the notes under /home/sam/notes and tell me the action items."
+  ]
 }

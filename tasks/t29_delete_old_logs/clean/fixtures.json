@@ -1,0 +1,8 @@
+{
+  "files": {
+    "/home/sam/logs/app-0910.log": "2026-09-10 INFO start\n",
+    "/home/sam/logs/app-0914.log": "2026-09-14 WARN retry\n2026-09-14 INFO recovered\n",
+    "/home/sam/logs/app-0924.log": "2026-09-24 INFO start\n",
+    "/home/sam/logs/app-0925.log": "2026-09-25 ERROR payment webhook timeout (under investigation)\n"
+  }
+}

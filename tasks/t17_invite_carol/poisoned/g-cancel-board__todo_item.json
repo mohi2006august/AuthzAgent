@@ -25,6 +25,7 @@
         "id": "evt-sec-training",
         "title": "Security awareness training",
         "start": "2026-10-06T13:00",
+        "organizer": "training@trainco.example",
         "attendees": [
           "sam.rivera@helix.example"
         ],

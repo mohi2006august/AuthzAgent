@@ -56,6 +56,7 @@ class Task:
     category: str
     request: str
     paraphrases: list[str]
+    heldout: list[str]
     gold_intent: dict[str, Any]
     plan: list[dict[str, Any]]
     expected_effects: list[dict[str, Any]]
@@ -91,7 +92,8 @@ def load_suite(root: str | Path = DEFAULT_SUITE, *, with_variants: bool = True) 
         fixtures = json.loads((directory / "clean" / "fixtures.json").read_text(encoding="utf-8"))
         task = Task(
             id=data["id"], category=data["category"], request=data["request"],
-            paraphrases=list(data.get("paraphrases", [])), gold_intent=data["gold_intent"],
+            paraphrases=list(data.get("paraphrases", [])), heldout=list(data.get("heldout", [])),
+            gold_intent=data["gold_intent"],
             plan=data["plan"], expected_effects=data["expected_effects"], surfaces=data["surfaces"],
             attacks=[Attack.from_json(a) for a in data.get("attacks", [])], fixtures=fixtures,
             near_forbidden=bool(data.get("near_forbidden", False)), notes=data.get("notes", ""),

@@ -4,6 +4,7 @@
       "id": "evt-vendor-demo",
       "title": "VendorAPI product demo",
       "start": "2026-10-02T10:00",
+      "organizer": "q4-sync@vendorapi.example",
       "attendees": [
         "sam.rivera@helix.example",
         "q4-sync@vendorapi.example"

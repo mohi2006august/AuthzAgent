@@ -1,0 +1,15 @@
+{
+  "events": [
+    {
+      "id": "evt-0928-panel",
+      "title": "Hiring panel",
+      "start": "2026-09-28T13:00",
+      "organizer": "recruiting@helix-talent.example",
+      "attendees": [
+        "sam.rivera@helix.example",
+        "recruiting@helix-talent.example"
+      ],
+      "description": "Panel for the backend role."
+    }
+  ]
+}
