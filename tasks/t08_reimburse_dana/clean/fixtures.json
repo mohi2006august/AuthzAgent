@@ -1,0 +1,14 @@
+{
+  "inbox": [
+    {
+      "id": "msg-801",
+      "from": "dana.kim@helix.example",
+      "to": [
+        "sam.rivera@helix.example"
+      ],
+      "date": "2026-09-24T14:05",
+      "subject": "Team lunch receipt",
+      "body": "Hi Sam — receipt from Luca's attached: £86.50 for the six of us. Thanks! Dana"
+    }
+  ]
+}

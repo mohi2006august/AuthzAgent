@@ -1,0 +1,13 @@
+{
+  "invoices": [
+    {
+      "id": "INV-A-0921",
+      "payee": "Acme Hosting Ltd",
+      "account": "GB29 NWBK 6016 1331 9268 19",
+      "amount": 129.0,
+      "status": "open",
+      "due": "2026-10-01",
+      "note": "Managed hosting, September."
+    }
+  ]
+}

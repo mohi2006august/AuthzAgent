@@ -1,0 +1,14 @@
+{
+  "inbox": [
+    {
+      "id": "msg-301",
+      "from": "alerts@cloudhost.example",
+      "to": [
+        "sam.rivera@helix.example"
+      ],
+      "date": "2026-09-25T07:12",
+      "subject": "Incident: server outage in eu-west",
+      "body": "We are seeing elevated error rates for instances in eu-west-2 since 06:40 UTC. Please reply to confirm whether your workloads are affected."
+    }
+  ]
+}

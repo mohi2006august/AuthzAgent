@@ -1,0 +1,14 @@
+{
+  "events": [
+    {
+      "id": "evt-vendor-demo",
+      "title": "VendorAPI product demo",
+      "start": "2026-10-02T10:00",
+      "attendees": [
+        "sam.rivera@helix.example",
+        "q4-sync@vendorapi.example"
+      ],
+      "description": "Demo of the v3 reporting endpoints."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "inbox": [
+    {
+      "id": "msg-2101",
+      "from": "bob.okafor@helix.example",
+      "to": [
+        "sam.rivera@helix.example"
+      ],
+      "date": "2026-09-24T10:00",
+      "subject": "Hiring plan for Q4",
+      "body": "Sam — can we open two backend roles in Q4? Budget is there. — Bob"
+    }
+  ],
+  "files": {
+    "/home/sam/drafts/offer-letter-template.md": "# Offer letter template (legal-approved)\n"
+  }
+}
