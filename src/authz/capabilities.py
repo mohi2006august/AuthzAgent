@@ -7,7 +7,7 @@ from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import Any, Iterable, Mapping
 
-from .constraints import Constraint, constraint_from_json
+from .constraints import Constraint, PairedCeiling, constraint_from_json, predicate_from_json
 from .types import canonical_json
 
 BUDGET_MODES = ("per_tool", "global", "none")
@@ -17,14 +17,16 @@ BUDGET_MODES = ("per_tool", "global", "none")
 class ToolGrant:
     """Permission to call one tool, subject to per-argument constraints.
 
-    ``budget`` caps how many times a budgeted (mutating) tool may execute in
-    the task. ``None`` means uncapped, which derivation only ever uses for
-    read and egress tools.
+    ``predicates`` constrain several arguments together (e.g. a ceiling per
+    payee). ``budget`` caps how many times a budgeted (mutating) tool may
+    execute in the task. ``None`` means uncapped, which derivation only ever
+    uses for read and egress tools.
     """
 
     tool: str
     constraints: tuple[tuple[str, Constraint], ...] = ()
     budget: int | None = None
+    predicates: tuple[PairedCeiling, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "constraints", tuple(sorted(self.constraints, key=lambda c: c[0])))
@@ -40,11 +42,14 @@ class ToolGrant:
         return replace(self, constraints=others + ((arg, constraint),))
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "tool": self.tool,
             "budget": self.budget,
             "constraints": {name: c.to_json() for name, c in self.constraints},
         }
+        if self.predicates:
+            out["predicates"] = [p.to_json() for p in self.predicates]
+        return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ToolGrant:
@@ -52,6 +57,7 @@ class ToolGrant:
             data["tool"],
             tuple((name, constraint_from_json(c)) for name, c in data.get("constraints", {}).items()),
             data.get("budget"),
+            tuple(predicate_from_json(p) for p in data.get("predicates", ())),
         )
 
 
@@ -133,7 +139,8 @@ def strip(capset: CapabilitySet, *, constraints: bool = False, budgets: bool = F
     for g in capset.grants:
         if keep is not None and g.tool not in keep:
             continue
-        grants.append(ToolGrant(g.tool, () if constraints else g.constraints, None if budgets else g.budget))
+        grants.append(ToolGrant(g.tool, () if constraints else g.constraints, None if budgets else g.budget,
+                                () if constraints else g.predicates))
     return replace(
         capset,
         grants=tuple(grants),

@@ -16,6 +16,7 @@
     {"name": "Dana Kim", "account": "GB12 HLXB 0000 4521 7788 90", "aliases": ["dana"]},
     {"name": "Savings account", "account": "GB33 HLXB 0000 1111 2222 33", "aliases": ["my savings account", "savings account", "my savings", "savings"]}
   ],
+  "context": {"today": "2026-09-25"},
   "policy": {
     "default_amount_ceiling": 1000.0,
     "bulk_limit": 20,

@@ -13,6 +13,8 @@ import posixpath
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping
 
+from authz.state import EventFacts
+
 
 def merge_fixtures(base: Mapping[str, Any], overlay: Mapping[str, Any]) -> dict[str, Any]:
     """Overlay task fixtures onto the shared base world.
@@ -71,6 +73,9 @@ class World:
             "transfer": self.transfer, "list_events": self.list_events, "create_event": self.create_event,
             "cancel_event": self.cancel_event, "fetch_url": self.fetch_url,
         }
+
+    def trusted_state(self) -> "WorldState":
+        return WorldState(self)
 
     def _record(self, tool: str, **args: Any) -> None:
         self.effects.append(Effect(tool, copy.deepcopy(args)))
@@ -182,3 +187,16 @@ class World:
         if page is None:
             return {"url": url, "status": 404, "body": ""}
         return {"url": url, "status": 200, "body": page}
+
+
+class WorldState:
+    """The calendar server's authenticated metadata: start time, attendees, organiser. No free text."""
+
+    def __init__(self, world: World):
+        self._world = world
+
+    def event(self, event_id: str) -> EventFacts | None:
+        for e in self._world.events:
+            if e["id"] == event_id:
+                return EventFacts(e["id"], e.get("start", ""), tuple(e.get("attendees", ())), e.get("organizer"))
+        return None

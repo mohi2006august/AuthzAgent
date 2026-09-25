@@ -1,15 +1,28 @@
-"""Rule-based intent parser.
+"""Rule-based intent parser (version 2).
 
 It reads only the user's request and the trusted profile, and it is
-deterministic: the same request and profile always yield the same record.
-It is deliberately simple. It works from a fixed verb lexicon, resolves names
-against the profile, and uses one-step pronoun resolution, and it fails
+deterministic: the same request, profile and date always yield the same
+record. It is deliberately simple. It works from a verb lexicon, resolves
+names against the profile, uses clause-level pronoun resolution, and it fails
 closed. When it cannot resolve a target it records the reference as
 unresolved rather than guessing, so the capability set grants nothing for it.
 
-Known blind spots (see the report's failure-mode section): verbs outside the
-lexicon, recipients that exist only in retrieved data, and noun/verb ambiguity
-beyond the determiner heuristic in :func:`_is_noun_use`.
+Changes from version 1 (tag ``v1``), each driven by a failure in the
+development data. That data is the original requests of t01–t40 plus the first
+paraphrase set. The held-out set (``heldout`` in task.json) was not used.
+
+* A stated amount is never replaced by the policy ceiling (F6), and several
+  payees with several amounts are paired in order.
+* "move/put/send £X to …" is a transfer.
+* "them" resolves to everyone named in the nearest clause that names people.
+* cancel_event carries the date and attendees named in its sentence, so the
+  grant can bind the event through trusted calendar metadata (F2).
+* Write and delete verbs can take a path that comes earlier in the sentence.
+* Plural "<ext> files" in a folder is a bulk delete of ``*.<ext>``.
+* More verbs: mail, respond, answer, pass (on), append, document, turn, relocate,
+  clear, "take care of" (an invoice), "give … a heads-up". "Send X an invite"
+  is an event, not an e-mail.
+* The request's URLs are recorded, so web access can be limited to them (F3).
 """
 
 from __future__ import annotations
@@ -18,6 +31,7 @@ import re
 from dataclasses import dataclass, field
 
 from .constraints import HostAllowList, canonical_path
+from .dates import resolve_dates
 from .intent import Action, IntentRecord
 from .profile import Profile
 
@@ -35,15 +49,18 @@ _AMOUNT_RE = re.compile(
 _EXT_RE = re.compile(r"(?<![\w/])\*?\.([A-Za-z0-9]{1,8})\b")
 _TOKEN_RE = re.compile(r"⟦[A-Z]\d+⟧|[A-Za-z0-9]+(?:['’][A-Za-z]+)?|[^\sA-Za-z0-9]")
 _ONE_ON_ONE_RE = re.compile(r"\b1:1\b|\bone-on-one\b", re.IGNORECASE)
+_SPACED_ISO = re.compile(r"\b(\d{4}) - (\d{2}) - (\d{2})\b")
 
 # ---------------------------------------------------------------------------
 # lexicon
 
-_SEND = {"email", "send", "forward", "reply", "tell", "notify", "inform", "message", "cc", "share"}
+_SEND = {"email", "send", "forward", "reply", "tell", "notify", "inform", "message", "cc", "share",
+         "mail", "respond", "answer", "pass"}
 _PAY = {"pay", "transfer", "reimburse", "remit", "wire", "settle", "refund"}
-_DELETE = {"delete", "remove", "erase", "trash", "purge", "wipe"}
-_WRITE = {"save", "write", "store", "update", "edit", "set", "change", "modify", "overwrite", "create", "put", "fix"}
-_MOVE = {"move", "rename"}
+_DELETE = {"delete", "remove", "erase", "trash", "purge", "wipe", "clear"}
+_WRITE = {"save", "write", "store", "update", "edit", "set", "change", "modify", "overwrite", "create", "put", "fix",
+          "append", "document", "turn"}
+_MOVE = {"move", "rename", "relocate"}
 _CREATE_EVENT = {"schedule", "book", "invite", "arrange"}
 _CANCEL = {"cancel"}
 _PHRASES: tuple[tuple[tuple[str, ...], str], ...] = (
@@ -52,28 +69,36 @@ _PHRASES: tuple[tuple[tuple[str, ...], str], ...] = (
     (("clear", "out"), "delete"),
     (("set", "up"), "create_event"),
     (("call", "off"), "cancel"),
-    (("add",), "add"),  # only meaningful with a calendar word; see _classify
+    (("take", "care", "of"), "settle"),  # a payment only with an invoice/bill word; see _draft
+    (("add",), "add"),  # an event with a calendar word, a write with a path; see _draft
 )
+_READ_REPLY = {"forward", "reply", "respond", "answer", "pass"}  # sending these needs the original message
 
 # Words that can also be nouns ("the latest email", "a reply", "an invite").
 _AMBIGUOUS = {"email", "reply", "message", "transfer", "schedule", "book", "change", "update", "set",
-              "store", "share", "invite", "edit", "fix", "cc", "forward", "wire", "trash"}
+              "store", "share", "invite", "edit", "fix", "cc", "forward", "wire", "trash", "mail", "answer",
+              "document", "clear", "turn", "pass"}
 _DETERMINERS = {"a", "an", "the", "this", "that", "these", "those", "my", "your", "his", "her", "our",
                 "their", "its", "latest", "last", "recent", "previous", "next", "first", "new", "any",
-                "each", "every", "some", "no", "whose", "which"}
+                "each", "every", "some", "no", "whose", "which", "one", "two", "three", "both",
+                "by", "via", "per"}
 _NOUN_FOLLOWERS = {"about", "from", "thread", "address", "chain", "inbox", "and", "or", "then",
+                   "into", "on", "in", "with", "saying",
                    ",", ".", ";", ":", "—", "-", "?", "!", ")"}
 _NEGATORS = {"don't", "dont", "not", "never", "without", "no"}
-_PRONOUNS = {"him", "her", "them"}
 _BULK = {"all", "every", "everything", "any"}
 _SEPARATELY = {"separately", "individually", "each"}
 _SENTENCE_END = {".", "?", "!", ";"}
+_INVITE_NOUNS = {"invite", "invitation"}
+_BILL_WORDS = {"invoice", "invoices", "bill", "bills", "payment"}
 
 _FS_WORDS = {"file", "files", "folder", "folders", "document", "documents", "directory", "notes", "drive"}
-_EMAIL_WORDS = {"inbox", "emails", "mail", "thread", "message", "messages"}
+_EMAIL_WORDS = {"inbox", "emails", "emailed", "thread", "message", "messages"}
+_EMAIL_NOUNS = {"email", "reply", "mail"}  # e-mail domain only when used as a noun
 _PAYMENT_WORDS = {"invoice", "invoices", "balance", "payment", "payments", "bill", "bills"}
 _CALENDAR_WORDS = {"calendar", "meeting", "meetings", "event", "events", "appointment", "schedule", "diary"}
-_MEETING_WORDS = {"meeting", "event", "call", "appointment", "invite", "sync", "standup", "calendar"}
+_MEETING_WORDS = {"meeting", "event", "call", "appointment", "invite", "sync", "standup", "calendar",
+                  "retro", "review", "demo", "workshop", "interview"}
 
 
 @dataclass
@@ -98,9 +123,9 @@ class _Mention:
 class _Verb:
     index: int
     word: str
-    kind: str  # send | pay | delete | write | move | create_event | cancel | add
-    span_end: int | None = None  # for "let X know": recipients live strictly inside the span
-    end: int = 0  # clause end (exclusive), filled in later
+    kind: str  # send | pay | delete | write | move | create_event | cancel | add | settle
+    span_end: int | None = None  # "let X know", "give X a heads-up": recipients live inside the span
+    end: int = 0  # clause end (exclusive)
 
 
 @dataclass
@@ -113,10 +138,11 @@ class _Draft:
     count: int = 1
     unresolved: list[str] = field(default_factory=list)
     evidence: str = ""
+    date: str | None = None
 
 
 class RuleBasedParser:
-    name = "rule-based/1"
+    name = "rule-based/2"
 
     def __init__(self, profile: Profile):
         self.profile = profile
@@ -141,9 +167,13 @@ class RuleBasedParser:
         tokens = [self._token(t) for t in _TOKEN_RE.findall(masked)]
         mentions = self._mentions(tokens)
         verbs = self._verbs(tokens, notes)
+        self._segments = self._make_segments(verbs, tokens)
 
-        drafts = [self._draft(v, tokens, mentions, entities, notes) for v in verbs]
-        drafts = self._merge(_expand_moves([d for d in drafts if d is not None]))
+        drafts: list[_Draft] = []
+        for v in verbs:
+            drafts.extend(self._draft(v, verbs, tokens, mentions, entities, notes))
+        drafts = self._merge(_expand_moves(drafts))
+        self._attach_request_amounts(drafts, entities, notes)
         actions = tuple(self._finish(d) for d in drafts)
 
         paths = [p for key, p in entities.items() if key.startswith("P") and p is not None]
@@ -151,6 +181,7 @@ class RuleBasedParser:
         for d in drafts:
             read_paths.update(directory for directory, _ in d.globs)
         hosts = sorted({str(h) for key, h in entities.items() if key.startswith("H")})
+        urls = sorted({str(entities[f"U{key[1:]}"]) for key in entities if key.startswith("H")})
         read_domains = self._domains(request, tokens, drafts, bool(paths), bool(hosts))
         if "fs" in read_domains and not read_paths:
             read_paths.add(self.profile.home)
@@ -161,6 +192,7 @@ class RuleBasedParser:
             read_domains=tuple(sorted(read_domains)),
             read_paths=tuple(sorted(read_paths)),
             fetch_hosts=tuple(hosts),
+            fetch_urls=tuple(urls),
             actions=actions,
             parser=self.name,
             notes=tuple(notes),
@@ -222,28 +254,26 @@ class RuleBasedParser:
 
     # -- mentions of people and payees ------------------------------------------
 
+    def _matches(self, tokens: list[_Token], i: int, alias: tuple[str, ...]) -> bool:
+        n = len(alias)
+        window = tokens[i:i + n]
+        return len(window) == n and all(
+            (t.base if k == n - 1 else t.lower) == a for k, (t, a) in enumerate(zip(window, alias))
+        )
+
     def _mentions(self, tokens: list[_Token]) -> list[_Mention]:
         mentions: list[_Mention] = []
         i = 0
         while i < len(tokens):
-            matched = None
-            for alias, name, email, account in self._aliases:
-                n = len(alias)
-                window = tokens[i:i + n]
-                if len(window) == n and all(
-                    (t.base if k == n - 1 else t.lower) == a for k, (t, a) in enumerate(zip(window, alias))
-                ):
-                    matched = (n, name, email, account)
-                    break
+            matched = next(((len(a), name, email, acct) for a, name, email, acct in self._aliases
+                            if self._matches(tokens, i, a)), None)
             if matched is None:
                 i += 1
                 continue
             n, name, email, account = matched
             # the same span may name both a contact and a payee (e.g. a colleague you reimburse)
             for alias, other_name, other_email, other_account in self._aliases:
-                if len(alias) == n and other_name == name and all(
-                    (t.base if k == n - 1 else t.lower) == a for k, (t, a) in enumerate(zip(tokens[i:i + n], alias))
-                ):
+                if len(alias) == n and other_name == name and self._matches(tokens, i, alias):
                     email = email or other_email
                     account = account or other_account
             mentions.append(_Mention(i, i + n, email, account, name, tokens[i + n - 1].possessive))
@@ -261,14 +291,18 @@ class RuleBasedParser:
             width = 1
             for phrase, kind in _PHRASES:
                 n = len(phrase)
-                if tuple(t.lower for t in tokens[i:i + n]) == phrase and (n > 1 or kind == "add"):
+                if tuple(t.lower for t in tokens[i:i + n]) == phrase:
                     found, width = _Verb(i, " ".join(phrase), kind), n
                     break
-            if found is None and tok.lower == "let":
+            if found is None and tok.lower in ("let", "give"):
                 end = self._sentence_end(tokens, i)
-                for j in range(i + 1, min(end, i + 8)):
-                    if tokens[j].lower == "know":
+                for j in range(i + 1, min(end, i + 9)):
+                    if tok.lower == "let" and tokens[j].lower == "know":
                         found, width = _Verb(i, "let … know", "send", span_end=j), j - i + 1
+                        break
+                    if (tok.lower == "give" and tokens[j].lower == "heads" and j + 2 < len(tokens)
+                            and tokens[j + 1].lower == "-" and tokens[j + 2].lower == "up"):
+                        found, width = _Verb(i, "give … heads-up", "send", span_end=j), j - i + 3
                         break
             if found is None:
                 kind = self._lexicon_kind(tok.lower)
@@ -304,10 +338,23 @@ class RuleBasedParser:
                 return j
         return len(tokens)
 
-    # -- one verb -> one draft action ---------------------------------------------
+    @staticmethod
+    def _sentence_start(tokens: list[_Token], index: int) -> int:
+        for j in range(index - 1, -1, -1):
+            if tokens[j].lower in _SENTENCE_END:
+                return j + 1
+        return 0
 
-    def _draft(self, verb: _Verb, tokens: list[_Token], mentions: list[_Mention],
-               entities: dict[str, object], notes: list[str]) -> _Draft | None:
+    @staticmethod
+    def _make_segments(verbs: list[_Verb], tokens: list[_Token]) -> list[tuple[int, int]]:
+        """The preamble before the first verb, then each verb's clause."""
+        first = verbs[0].index if verbs else len(tokens)
+        return [(0, first)] + [(v.index, v.end) for v in verbs]
+
+    # -- one verb -> draft actions ---------------------------------------------
+
+    def _draft(self, verb: _Verb, verbs: list[_Verb], tokens: list[_Token], mentions: list[_Mention],
+               entities: dict[str, object], notes: list[str]) -> list[_Draft]:
         lo, hi = verb.index, verb.end
         words = {t.lower for t in tokens[lo:hi]}
         keys = [t.text[1:-1] for t in tokens[lo:hi] if t.text.startswith("⟦")]
@@ -320,52 +367,86 @@ class RuleBasedParser:
         has_meeting = bool(words & _MEETING_WORDS)
 
         kind = verb.kind
-        if kind == "send" and verb.word == "send" and amounts:
+        if kind in ("send", "move", "write") and verb.word in ("send", "move", "put") and amounts:
+            kind = "pay"  # "send £50 to …", "move £500 to my savings"
+        if kind == "settle":
+            if not words & _BILL_WORDS:
+                return []
             kind = "pay"
+        if kind == "send" and verb.word != "invite" and words & _INVITE_NOUNS:
+            kind = "create_event"  # "send Carol an invite for …"
         if kind == "write" and verb.word == "write" and not paths:
             kind = "send" if self._people(mentions, lo, hi) else "write"
         if kind == "add":
-            if not has_calendar:
-                return None
-            kind = "create_event"
+            if has_calendar:
+                kind = "create_event"
+            elif paths or self._earlier_paths(verb, verbs, tokens, entities):
+                kind = "write"
+            else:
+                return []
         if kind == "write" and verb.word in ("put", "create"):
             if has_calendar or (verb.word == "create" and has_meeting):
                 kind = "create_event"
         if kind == "create_event" and verb.word == "set up" and not has_meeting:
             notes.append("'set up' without a meeting word ignored")
-            return None
+            return []
         if kind == "delete" and not paths and not extensions and has_calendar:
             kind = "cancel"
+        if kind in ("write", "delete", "move") and not paths:
+            paths = self._earlier_paths(verb, verbs, tokens, entities)
+            if paths:
+                notes.append(f"'{verb.word}' takes {paths} from earlier in the sentence")
 
         if kind == "send":
-            return self._people_draft("send_email", verb, tokens, mentions, emails, evidence, words, notes)
+            return [self._people_draft("send_email", verb, tokens, mentions, emails, evidence, words, notes)]
         if kind == "create_event":
-            return self._people_draft("create_event", verb, tokens, mentions, emails, evidence, words, notes)
+            return [self._people_draft("create_event", verb, tokens, mentions, emails, evidence, words, notes)]
         if kind == "pay":
-            return self._payment_draft(verb, tokens, mentions, amounts, evidence, notes)
+            return self._payment_drafts(verb, tokens, mentions, amounts, evidence, notes)
         if kind == "cancel":
-            count = self.profile.bulk_limit if words & _BULK else 1
-            return _Draft("cancel_event", count=count, evidence=evidence)
+            return [self._cancel_draft(verb, tokens, mentions, entities, words, notes)]
         if kind == "move":
             if len(paths) < 2:
                 notes.append(f"'{verb.word}' without source and destination paths ignored")
-                return None
-            return _Draft("move", explicit=[paths[0], paths[-1]], evidence=evidence)
+                return []
+            return [_Draft("move", explicit=[paths[0], paths[-1]], evidence=evidence)]
         if kind == "write":
             if not paths:
                 notes.append(f"'{verb.word}' without a path ignored")
-                return None
-            return _Draft("write_file", explicit=list(paths), count=len(set(paths)), evidence=evidence)
+                return []
+            return [_Draft("write_file", explicit=list(paths), count=len(set(paths)), evidence=evidence)]
         if kind == "delete":
-            if words & _BULK and paths:
-                pattern = f"*.{extensions[0]}" if extensions else "*"
-                globs = [(p, pattern) for p in paths]
-                return _Draft("delete_file", globs=globs, count=self.profile.bulk_limit, evidence=evidence)
+            dir_like = [p for p in paths if "." not in str(p).rsplit("/", 1)[-1]]
+            plural = bool(words & {"files", "logs"})
+            if paths and (words & _BULK or (plural and dir_like)):
+                ext = extensions[0] if extensions else ("log" if words & {"log", "logs"} else None)
+                pattern = f"*.{ext}" if ext else "*"
+                roots = dir_like or paths
+                return [_Draft("delete_file", globs=[(p, pattern) for p in roots], count=self.profile.bulk_limit,
+                               evidence=evidence)]
             if not paths:
                 notes.append(f"'{verb.word}' without a path ignored")
-                return None
-            return _Draft("delete_file", explicit=list(paths), count=len(set(paths)), evidence=evidence)
-        return None
+                return []
+            return [_Draft("delete_file", explicit=list(paths), count=len(set(paths)), evidence=evidence)]
+        return []
+
+    def _earlier_paths(self, verb: _Verb, verbs: list[_Verb], tokens: list[_Token],
+                       entities: dict[str, object]) -> list[str]:
+        """Paths between the start of the verb's sentence and the verb, not inside another verb's clause."""
+        start = self._sentence_start(tokens, verb.index)
+        claimed = set()
+        for other in verbs:
+            if other is not verb:
+                claimed.update(range(other.index, other.end))
+        out = []
+        for j in range(start, verb.index):
+            t = tokens[j].text
+            if j in claimed or not t.startswith("⟦P"):
+                continue
+            value = entities.get(t[1:-1])
+            if value is not None:
+                out.append(str(value))
+        return out
 
     def _people(self, mentions: list[_Mention], lo: int, hi: int) -> list[_Mention]:
         return [m for m in mentions if lo <= m.start < hi and not m.possessive and m.contact_email]
@@ -379,11 +460,19 @@ class RuleBasedParser:
             draft.explicit.append(m.contact_email)  # type: ignore[arg-type]
             notes.append(f"resolved {' '.join(t.text for t in tokens[m.start:m.end])!r} -> {m.contact_email}")
         for j in range(lo, hi):
-            if tokens[j].lower in _PRONOUNS:
+            word = tokens[j].lower
+            if word in ("him", "her"):
                 ref = self._antecedent(mentions, j, want="contact")
                 if ref is not None:
                     draft.inferred.append(ref.contact_email)  # type: ignore[arg-type]
                     notes.append(f"pronoun {tokens[j].text!r} -> {ref.name}")
+                else:
+                    draft.unresolved.append(tokens[j].text)
+            elif word == "them":
+                group = self._plural_antecedent(mentions, j)
+                if group:
+                    draft.inferred.extend(m.contact_email for m in group)  # type: ignore[misc]
+                    notes.append(f"pronoun 'them' -> {[m.name for m in group]}")
                 else:
                     draft.unresolved.append(tokens[j].text)
         if kind == "send_email" and not draft.explicit and not draft.inferred and not draft.unresolved:
@@ -394,17 +483,26 @@ class RuleBasedParser:
             notes.append(f"unresolved recipient in {evidence!r}")
         return draft
 
-    def _payment_draft(self, verb: _Verb, tokens: list[_Token], mentions: list[_Mention],
-                       amounts: list[object], evidence: str, notes: list[str]) -> _Draft:
+    def _payment_drafts(self, verb: _Verb, tokens: list[_Token], mentions: list[_Mention],
+                        amounts: list[object], evidence: str, notes: list[str]) -> list[_Draft]:
         lo, hi = verb.index, verb.end
-        draft = _Draft("transfer", evidence=evidence)
-        for m in mentions:
-            if lo <= m.start < hi and m.payee_account:
-                draft.explicit.append(m.payee_account)
-                notes.append(f"resolved payee {m.name!r} -> {m.payee_account}")
+        payees = [m for m in mentions if lo <= m.start < hi and m.payee_account]
+        if not payees:
+            # "Globex sent an invoice by email — please pay it": the payee is named earlier in the sentence
+            start = self._sentence_start(tokens, verb.index)
+            earlier = [m for m in mentions if start <= m.start < lo and m.payee_account]
+            if len({m.payee_account for m in earlier}) == 1:
+                payees = earlier[-1:]
+        for m in payees:
+            notes.append(f"resolved payee {m.name!r} -> {m.payee_account}")
+        if len(payees) > 1 and len(payees) == len(amounts):
+            notes.append("paired payees and amounts in order")
+            return [_Draft("transfer", explicit=[m.payee_account], amount=float(a), evidence=evidence)  # type: ignore[list-item,arg-type]
+                    for m, a in zip(payees, amounts)]
+        draft = _Draft("transfer", explicit=[m.payee_account for m in payees], evidence=evidence)  # type: ignore[misc]
         if not draft.explicit:
             for j in range(lo, hi):
-                if tokens[j].lower in _PRONOUNS:
+                if tokens[j].lower in ("him", "her", "them"):
                     ref = self._antecedent(mentions, j, want="payee")
                     if ref is not None:
                         draft.inferred.append(ref.payee_account)  # type: ignore[arg-type]
@@ -416,6 +514,27 @@ class RuleBasedParser:
         if amounts:
             draft.amount = float(max(amounts))  # type: ignore[arg-type]
         draft.count = max(1, len(set(draft.explicit + draft.inferred)))
+        return [draft]
+
+    def _cancel_draft(self, verb: _Verb, tokens: list[_Token], mentions: list[_Mention],
+                      entities: dict[str, object], words: set[str], notes: list[str]) -> _Draft:
+        start = self._sentence_start(tokens, verb.index)
+        end = self._sentence_end(tokens, verb.index)
+        # tokens split "2026-10-02" into "2026 - 10 - 02"; rejoin before resolving dates
+        sentence = _SPACED_ISO.sub(r"\1-\2-\3", self._evidence(tokens[start:end], entities))
+        attendees = sorted({m.contact_email for m in mentions  # type: ignore[misc]
+                            if start <= m.start < end and m.contact_email and not m.possessive})
+        attendees += sorted({m.contact_email for m in mentions  # "Friday's 1:1 with Bob" / "Bob's 1:1"
+                             if start <= m.start < end and m.contact_email and m.possessive} - set(attendees))
+        dates = resolve_dates(sentence, self.profile.today)
+        sentence_words = {t.lower for t in tokens[start:end]}
+        bulk = bool(sentence_words & _BULK) or verb.word in ("clear", "clear out", "wipe")
+        draft = _Draft("cancel_event", explicit=attendees, count=self.profile.bulk_limit if bulk else 1,
+                       evidence=self._evidence(tokens[verb.index:verb.end], entities), date=dates[0] if dates else None)
+        if dates:
+            notes.append(f"cancellation bound to {dates[0]}")
+        if attendees:
+            notes.append(f"cancellation bound to attendees {attendees}")
         return draft
 
     @staticmethod
@@ -424,6 +543,15 @@ class RuleBasedParser:
             if m.end <= index and (m.contact_email if want == "contact" else m.payee_account):
                 return m
         return None
+
+    def _plural_antecedent(self, mentions: list[_Mention], index: int) -> list[_Mention]:
+        """Everyone named in the nearest earlier clause (or the preamble) that names people."""
+        before = [(lo, hi) for lo, hi in self._segments if lo < index]
+        for lo, hi in reversed(before):
+            group = [m for m in mentions if lo <= m.start < min(hi, index) and m.contact_email and not m.possessive]
+            if group:
+                return group
+        return []
 
     @staticmethod
     def _evidence(tokens: list[_Token], entities: dict[str, object]) -> str:
@@ -469,6 +597,19 @@ class RuleBasedParser:
             merged.append(d)
         return merged
 
+    @staticmethod
+    def _attach_request_amounts(drafts: list[_Draft], entities: dict[str, object], notes: list[str]) -> None:
+        """F6: a stated amount is never replaced by the policy ceiling.
+
+        If the request has exactly one transfer and it picked up no amount from
+        its own clause, it takes the largest amount stated anywhere in the request.
+        """
+        transfers = [d for d in drafts if d.kind == "transfer"]
+        stated = [float(v) for k, v in entities.items() if k.startswith("A")]  # type: ignore[arg-type]
+        if len(transfers) == 1 and transfers[0].amount is None and stated:
+            transfers[0].amount = max(stated)
+            notes.append(f"amount {max(stated)} taken from elsewhere in the request")
+
     def _finish(self, d: _Draft) -> Action:
         targets = tuple(sorted(set(d.explicit + d.inferred)))
         unresolved = () if targets else tuple(dict.fromkeys(d.unresolved))
@@ -487,6 +628,7 @@ class RuleBasedParser:
             count=d.count,
             unresolved=unresolved,
             evidence=d.evidence,
+            date=d.date,
         )
 
     def _domains(self, request: str, tokens: list[_Token], drafts: list[_Draft], has_paths: bool,
@@ -496,9 +638,9 @@ class RuleBasedParser:
         if has_paths or set(lowers) & _FS_WORDS:
             domains.add("fs")
         for i, word in enumerate(lowers):
-            if word in _EMAIL_WORDS or (word in ("email", "reply") and _is_noun_use(tokens, i)):
+            if word in _EMAIL_WORDS or (word in _EMAIL_NOUNS and _is_noun_use(tokens, i)):
                 domains.add("email")
-            if word in ("forward", "reply") and not _is_noun_use(tokens, i):
+            if word in _READ_REPLY and not _is_noun_use(tokens, i):
                 domains.add("email")
         if set(lowers) & _PAYMENT_WORDS:
             domains.add("payments")

@@ -21,7 +21,8 @@ class Action:
 
     ``targets`` holds resolved identifiers: email addresses for send_email and
     create_event, account numbers for transfer, absolute paths for
-    delete_file and write_file. ``unresolved`` holds references the parser
+    delete_file and write_file, attendees that must be present for
+    cancel_event. ``unresolved`` holds references the parser
     could not resolve from trusted input ("them", "everyone on the list"),
     which the capability set therefore cannot grant.
     """
@@ -34,6 +35,7 @@ class Action:
     count: int = 1
     unresolved: tuple[str, ...] = ()
     evidence: str = ""
+    date: str | None = None  # cancel_event: the day the event must be on (YYYY-MM-DD)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -45,6 +47,7 @@ class Action:
             "count": self.count,
             "unresolved": list(self.unresolved),
             "evidence": self.evidence,
+            "date": self.date,
         }
 
     @classmethod
@@ -60,6 +63,7 @@ class Action:
             count=int(data.get("count", 1)),
             unresolved=tuple(data.get("unresolved", ())),
             evidence=data.get("evidence", ""),
+            date=data.get("date"),
         )
 
 
@@ -69,6 +73,7 @@ class IntentRecord:
     read_domains: tuple[str, ...] = ()
     read_paths: tuple[str, ...] = ()
     fetch_hosts: tuple[str, ...] = ()
+    fetch_urls: tuple[str, ...] = ()
     actions: tuple[Action, ...] = ()
     parser: str = "manual"
     notes: tuple[str, ...] = field(default=())
@@ -83,6 +88,7 @@ class IntentRecord:
             "read_domains": list(self.read_domains),
             "read_paths": list(self.read_paths),
             "fetch_hosts": list(self.fetch_hosts),
+            "fetch_urls": list(self.fetch_urls),
             "actions": [a.to_json() for a in self.actions],
             "irreversible_requested": self.irreversible_requested,
             "parser": self.parser,
@@ -96,6 +102,7 @@ class IntentRecord:
             read_domains=tuple(sorted(set(data.get("read_domains", ())))),
             read_paths=tuple(sorted(set(data.get("read_paths", ())))),
             fetch_hosts=tuple(sorted(set(data.get("fetch_hosts", ())))),
+            fetch_urls=tuple(sorted(set(data.get("fetch_urls", ())))),
             actions=tuple(Action.from_json(a) for a in data.get("actions", ())),
             parser=data.get("parser", "manual"),
             notes=tuple(data.get("notes", ())),
@@ -113,6 +120,7 @@ class IntentRecord:
             "read_domains": sorted(self.read_domains),
             "read_paths": sorted(self.read_paths),
             "fetch_hosts": sorted(self.fetch_hosts),
+            "fetch_urls": sorted(self.fetch_urls),
             "actions": sorted(
                 (
                     {
@@ -121,6 +129,7 @@ class IntentRecord:
                         "globs": sorted(list(g) for g in a.globs),
                         "amount_ceiling": a.amount_ceiling,
                         "count": a.count,
+                        "date": a.date,
                     }
                     for a in self.actions
                 ),

@@ -17,12 +17,13 @@ from .parser import RuleBasedParser
 from .profile import Contact, Payee, Profile
 from .registry import DEFAULT_REGISTRY, ToolRegistry, ToolSpec
 from .session import Outcome, Session
+from .state import EventFacts, TrustedState
 from .types import Allow, Deny, Reason, ToolCall, Verdict
 
 __all__ = [
-    "Action", "Allow", "AuditStore", "CapabilitySet", "Contact", "DEFAULT_REGISTRY", "Deny",
+    "Action", "Allow", "AuditStore", "CapabilitySet", "Contact", "DEFAULT_REGISTRY", "Deny", "EventFacts",
     "EscalationRequest", "IntentParser", "IntentRecord", "Outcome", "Payee", "Profile", "Reason",
-    "RuleBasedParser", "Session", "ToolCall", "ToolGrant", "ToolRegistry", "ToolSpec", "Trail", "Usage",
+    "RuleBasedParser", "Session", "ToolCall", "ToolGrant", "ToolRegistry", "ToolSpec", "Trail", "TrustedState", "Usage",
     "Verdict", "audit", "check", "configure_audit", "deny_all", "derive", "derive_from_intent",
     "widen_to_permit",
 ]

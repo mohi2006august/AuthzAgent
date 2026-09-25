@@ -1,9 +1,10 @@
 """The mediator: a pure function from (capability set, call, usage) to a verdict.
 
 No model is involved and nothing here reads tool outputs, documents or any
-other untrusted text. Its inputs are the call as the agent emitted it and a
-grant derived from the trusted request, so there is nothing in its input
-that could persuade it.
+other untrusted text. Its inputs are the call as the agent emitted it, a grant
+derived from the trusted request, and optionally :class:`authz.state.TrustedState`.
+That state carries structured, server-authenticated metadata only (an event's
+start time and attendee addresses), never free text.
 
 ``usage`` is how many budgeted actions have already executed in the task. The
 session derives it from its own record of executed calls, not from anything the
@@ -14,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
+from typing import Any, Mapping
 
 from .capabilities import CapabilitySet
 from .registry import DEFAULT_REGISTRY, ToolRegistry
@@ -43,6 +44,7 @@ def check(
     call: ToolCall,
     usage: Usage = NO_USAGE,
     registry: ToolRegistry = DEFAULT_REGISTRY,
+    state: Any = None,
 ) -> Verdict:
     version = capability_set.version
     spec = registry.get(call.tool)
@@ -63,10 +65,17 @@ def check(
         if arg not in call.args:
             continue  # optional argument omitted; nothing to constrain
         value = call.args[arg]
+        needs_state = getattr(constraint, "needs_state", False)
         for item in value if isinstance(value, list) else (value,):
-            detail = constraint.check(item)
+            detail = constraint.check(item, state) if needs_state else constraint.check(item)
             if detail is not None:
                 return Deny(constraint.reason, f"{arg}: {detail}", arg, version)
+
+    for predicate in grant.predicates:
+        failure = predicate.check_call(call.args)
+        if failure is not None:
+            arg, detail = failure
+            return Deny(predicate.reason, f"{arg}: {detail}", arg, version)
 
     if spec.budgeted:
         if capability_set.budget_mode == "per_tool" and grant.budget is not None:

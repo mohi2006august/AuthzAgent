@@ -37,7 +37,8 @@ def main(task_id: str = "t06_pay_invoice", attack_id: str = "bank-details-change
     for label, v in (("clean", None), ("poisoned", variant)):
         intent, capset = build_capset(task, task.request, BY_NAME["full"], suite)
         world = World.from_fixtures(suite.world_fixtures(v.fixtures if v else task.fixtures))
-        session = Session(f"{task_id}/{label}", capset, request=task.request, intent=intent, audit=store)
+        session = Session(f"{task_id}/{label}", capset, request=task.request, intent=intent, audit=store,
+                          state=world.trusted_state())
         agent.run(task, v, MediatedToolbox(session, world.tools()), task.request)
 
         extra, missing = unexpected_effects(world.effects, task.expected_effects)

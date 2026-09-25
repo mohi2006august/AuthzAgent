@@ -207,6 +207,141 @@ class HostAllowList:
         return {"type": self.kind, "hosts": list(self.hosts), "reason": self.reason.value}
 
 
+def normalise_url(url: str) -> str:
+    """Lower-case scheme and host, drop the fragment (never sent to the server)."""
+    parts = urlsplit(url)
+    netloc = parts.netloc.lower()
+    return f"{parts.scheme.lower()}://{netloc}{parts.path or '/'}" + (f"?{parts.query}" if parts.query else "")
+
+
+@dataclass(frozen=True)
+class UrlScope:
+    """The URLs the request named, plus query-free navigation on their hosts.
+
+    Stricter than :class:`HostAllowList`: a granted host cannot be used as an
+    exfiltration channel through query strings. (Data encoded in the *path* of
+    a same-host URL still gets through; see the report, F3.)
+    """
+
+    urls: tuple[str, ...] = ()
+    hosts: tuple[str, ...] = ()
+    reason: Reason = Reason.URL_NOT_ALLOWED
+    kind: str = "url_scope"
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "urls", tuple(sorted({normalise_url(u) for u in self.urls})))
+        object.__setattr__(self, "hosts", tuple(sorted({h.lower() for h in self.hosts})))
+
+    def check(self, value: Any) -> str | None:
+        host = HostAllowList.host_of(value)
+        if host is None:
+            return f"{value!r} is not a plain http(s) URL"
+        if normalise_url(value) in self.urls:
+            return None
+        if host in self.hosts and not urlsplit(value).query:
+            return None
+        if host in self.hosts:
+            return f"{value!r} adds a query string to a granted host; only the URLs named in the request may carry one"
+        return f"host {host!r} is not one of {list(self.hosts)}"
+
+    def widened(self, value: str) -> UrlScope:
+        return UrlScope(self.urls + (value,), self.hosts, self.reason)
+
+    def to_json(self) -> dict[str, Any]:
+        return {"type": self.kind, "urls": list(self.urls), "hosts": list(self.hosts), "reason": self.reason.value}
+
+
+@dataclass(frozen=True)
+class EventMatch:
+    """An event id is allowed if trusted calendar metadata matches the request.
+
+    Needs :class:`authz.state.TrustedState`. The mediator passes it in, and
+    without it every id not approved explicitly is denied.
+    """
+
+    date: str | None = None
+    attendees: tuple[str, ...] = ()
+    ids: tuple[str, ...] = ()  # approved individually through escalation
+    reason: Reason = Reason.EVENT_NOT_ALLOWED
+    kind: str = "event_match"
+    needs_state: bool = True
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "attendees", tuple(sorted({normalise_email(a) for a in self.attendees})))
+        object.__setattr__(self, "ids", tuple(sorted(set(self.ids))))
+
+    def check(self, value: Any, state: Any = None) -> str | None:
+        if not isinstance(value, str):
+            return f"{value!r} is not an event id"
+        if value in self.ids:
+            return None
+        if state is None:
+            return "no trusted calendar metadata is available to verify this event"
+        facts = state.event(value)
+        if facts is None:
+            return f"no event {value!r}"
+        if self.date and not facts.start.startswith(self.date):
+            return f"event {value!r} is on {facts.start[:10]}, not {self.date} as requested"
+        present = {normalise_email(a) for a in facts.attendees}
+        missing = [a for a in self.attendees if a not in present]
+        if missing:
+            return f"event {value!r} does not include {missing}"
+        return None
+
+    def widened(self, value: str) -> EventMatch:
+        return EventMatch(self.date, self.attendees, self.ids + (value,), self.reason)
+
+    def to_json(self) -> dict[str, Any]:
+        return {"type": self.kind, "date": self.date, "attendees": list(self.attendees), "ids": list(self.ids),
+                "reason": self.reason.value}
+
+
+@dataclass(frozen=True)
+class PairedCeiling:
+    """A grant-level predicate: each payee has its own ceiling.
+
+    A per-argument ceiling cannot express "£120 to Northwind *and* £75 to Acme".
+    This checks the pair (account, amount) together.
+    """
+
+    ceilings: tuple[tuple[str, float], ...]
+    key_arg: str = "to_account"
+    value_arg: str = "amount"
+    reason: Reason = Reason.AMOUNT_EXCEEDS_CEILING
+    kind: str = "paired_ceiling"
+
+    def __post_init__(self) -> None:
+        merged: dict[str, float] = {}
+        for account, ceiling in self.ceilings:
+            key = normalise_account(account)
+            merged[key] = max(merged.get(key, 0.0), float(ceiling))
+        object.__setattr__(self, "ceilings", tuple(sorted(merged.items())))
+
+    def check_call(self, args: Mapping[str, Any]) -> tuple[str, str] | None:
+        account, amount = args.get(self.key_arg), args.get(self.value_arg)
+        if not isinstance(account, str) or not isinstance(amount, (int, float)):
+            return None  # the per-argument constraints and the schema handle malformed calls
+        limit = dict(self.ceilings).get(normalise_account(account))
+        if limit is None or amount <= limit + 1e-9:
+            return None
+        return self.value_arg, f"{amount} exceeds the ceiling of {limit} for this payee"
+
+    def widened_for(self, args: Mapping[str, Any]) -> PairedCeiling:
+        return PairedCeiling(self.ceilings + ((args[self.key_arg], float(args[self.value_arg])),),
+                             self.key_arg, self.value_arg, self.reason)
+
+    def to_json(self) -> dict[str, Any]:
+        return {"type": self.kind, "ceilings": [list(c) for c in self.ceilings], "key_arg": self.key_arg,
+                "value_arg": self.value_arg, "reason": self.reason.value}
+
+
+def predicate_from_json(data: Mapping[str, Any]) -> PairedCeiling:
+    if data["type"] != "paired_ceiling":
+        raise ValueError(f"unknown predicate type {data['type']!r}")
+    return PairedCeiling(tuple((a, float(c)) for a, c in data["ceilings"]), data.get("key_arg", "to_account"),
+                         data.get("value_arg", "amount"), Reason(data["reason"]))
+
+
 def constraint_from_json(data: Mapping[str, Any]) -> Constraint:
     kind = data["type"]
     reason = Reason(data["reason"])
@@ -225,4 +360,8 @@ def constraint_from_json(data: Mapping[str, Any]) -> Constraint:
         )
     if kind == "host_allow_list":
         return HostAllowList(tuple(data["hosts"]), reason)
+    if kind == "url_scope":
+        return UrlScope(tuple(data.get("urls", ())), tuple(data.get("hosts", ())), reason)
+    if kind == "event_match":
+        return EventMatch(data.get("date"), tuple(data.get("attendees", ())), tuple(data.get("ids", ())), reason)
     raise ValueError(f"unknown constraint type {kind!r}")

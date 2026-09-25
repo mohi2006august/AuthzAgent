@@ -1,9 +1,15 @@
 """Escalation: the only way a capability set changes mid-task.
 
 When the mediator denies a call, the session may ask the user whether to
-widen scope. The request shows the user the exact call and the denial reason.
+widen scope. The request shows the user three things: the exact call, the
+denial reason, and every irreversible action already executed in the task.
 It never includes the agent's justification, because that text is produced by
 the thing being constrained, after it has read untrusted content.
+
+The execution history is there because of failure mode F4. An injected
+duplicate payment can spend the budget first. Then the legitimate payment is
+denied, escalated, and approved by a user who cannot otherwise see that the
+money has already gone once.
 
 Widening is minimal: just enough to permit this one call (add this recipient,
 raise the ceiling to this amount, allow one more execution). It produces a new
@@ -16,7 +22,7 @@ from dataclasses import dataclass, replace
 from typing import Callable, Protocol
 
 from .capabilities import CapabilitySet, ToolGrant
-from .constraints import AllowList, HostAllowList, MaxValue, PathScope
+from .constraints import AllowList, EventMatch, MaxValue, PathScope, UrlScope
 from .registry import DEFAULT_REGISTRY, SCOPE_REASONS, ToolRegistry
 from .types import Deny, Reason, ToolCall
 
@@ -28,13 +34,20 @@ class EscalationRequest:
     denial: Deny
     current: CapabilitySet
     proposed: CapabilitySet
+    history: tuple[ToolCall, ...] = ()  # irreversible calls already executed in this task, in order
 
     def summary(self) -> str:
-        return (
-            f"The agent wants to run {self.call.tool} with {self.call.canonical_args()}.\n"
-            f"It was blocked: {self.denial.reason.value} ({self.denial.detail}).\n"
-            "Allow this one action?"
-        )
+        lines = [
+            f"The agent wants to run {self.call.tool} with {self.call.canonical_args()}.",
+            f"It was blocked: {self.denial.reason.value} ({self.denial.detail}).",
+        ]
+        if self.history:
+            lines.append("Already done in this task:")
+            lines += [f"  - {c.tool} {c.canonical_args()}" for c in self.history]
+        else:
+            lines.append("Nothing irreversible has been done in this task yet.")
+        lines.append("Allow this one action?")
+        return "\n".join(lines)
 
 
 class EscalationHandler(Protocol):
@@ -72,7 +85,9 @@ def _minimal_grant(call: ToolCall, registry: ToolRegistry) -> ToolGrant:
         elif scope == "path":
             constraints.append((arg, PathScope(exact=tuple(values))))
         elif scope == "host":
-            constraints.append((arg, HostAllowList(tuple(h for v in values if (h := HostAllowList.host_of(v))))))
+            constraints.append((arg, UrlScope(urls=tuple(values))))
+        elif scope == "event":
+            constraints.append((arg, EventMatch(ids=tuple(values))))
     return ToolGrant(call.tool, tuple(constraints), 1 if spec.budgeted else None)
 
 
@@ -97,14 +112,21 @@ def widen_to_permit(
     else:
         arg = denial.arg
         constraint = grant.constraint_for(arg) if arg else None
-        if constraint is None:
+        new_grant = grant
+        if constraint is not None:
+            value = call.args[arg]
+            widened = constraint
+            for item in value if isinstance(value, list) else [value]:
+                failing = (widened.check(item, None) if getattr(widened, "needs_state", False)
+                           else widened.check(item))
+                if failing is not None:
+                    widened = widened.widened(item)  # type: ignore[attr-defined]
+            new_grant = new_grant.with_constraint(arg, widened)
+        # grant-level predicates that reject this call are widened for exactly this pair
+        predicates = tuple(p.widened_for(call.args) if p.check_call(call.args) else p for p in grant.predicates)
+        if constraint is None and predicates == grant.predicates:
             return None
-        value = call.args[arg]
-        widened = constraint
-        for item in value if isinstance(value, list) else [value]:
-            if widened.check(item) is not None:
-                widened = widened.widened(item)  # type: ignore[attr-defined]
-        new_grant = grant.with_constraint(arg, widened)
+        new_grant = replace(new_grant, predicates=predicates)
 
     return replace(
         capset.with_grant(new_grant),

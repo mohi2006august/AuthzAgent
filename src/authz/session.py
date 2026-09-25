@@ -51,14 +51,17 @@ class Session:
         escalation: EscalationHandler | None = None,
         registry: ToolRegistry = DEFAULT_REGISTRY,
         mediate: bool = True,
+        state: Any = None,
     ):
         self.task_id = task_id
+        self.state = state  # authz.state.TrustedState, if the integrator provides one
         self.registry = registry
         self.escalation = escalation
         self.mediate = mediate
         self.audit = audit or default_store()
         self._capset = capability_set
         self._usage = NO_USAGE
+        self._history: list[ToolCall] = []  # irreversible calls executed so far, shown on escalation
         self.audit.open_task(task_id, request, intent)
         self.audit.record_grant(task_id, capability_set, "derived")
 
@@ -76,7 +79,8 @@ class Session:
         """Parse the request and derive the grant before the agent's first model call."""
         intent = (parser or RuleBasedParser(profile)).parse(request)
         capset = derive_from_intent(intent, profile, budget_mode=budget_mode,
-                                    registry=kwargs.get("registry", DEFAULT_REGISTRY))
+                                    registry=kwargs.get("registry", DEFAULT_REGISTRY),
+                                    **kwargs.pop("derive_options", {}))
         return cls(task_id, capset, request=request, intent=intent, **kwargs)
 
     @property
@@ -87,10 +91,14 @@ class Session:
     def usage(self) -> Usage:
         return self._usage
 
+    @property
+    def history(self) -> tuple[ToolCall, ...]:
+        return tuple(self._history)
+
     def _check(self, call: ToolCall) -> tuple[Verdict, float]:
         start = time.perf_counter_ns()
         if self.mediate:
-            verdict = check(self._capset, call, self._usage, self.registry)
+            verdict = check(self._capset, call, self._usage, self.registry, self.state)
         else:
             verdict = Allow(self._capset.version)
         return verdict, (time.perf_counter_ns() - start) / 1000.0
@@ -110,7 +118,7 @@ class Session:
             proposed = widen_to_permit(self._capset, call, verdict, self.registry)
             if proposed is None:
                 break
-            request = EscalationRequest(self.task_id, call, verdict, self._capset, proposed)
+            request = EscalationRequest(self.task_id, call, verdict, self._capset, proposed, self.history)
             approved = bool(self.escalation(request))
             pending_seq = self.audit.record_call(self.task_id, call, verdict, latency_us=latency, escalated=True)
             self.audit.record_escalation(self.task_id, pending_seq, call, verdict.reason.value, approved,
@@ -137,6 +145,8 @@ class Session:
         spec = self.registry.get(call.tool)
         if spec is not None and spec.budgeted:
             self._usage = self._usage.after(call.tool)
+        if spec is not None and spec.irreversible:
+            self._history.append(call)
         return Outcome(call, verdict, result=result, escalated=escalated)
 
 

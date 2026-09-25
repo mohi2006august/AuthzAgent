@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 
 from .agents import make_agent
-from .configs import BY_NAME, CONFIGS
+from .configs import BY_NAME, DEFAULT_CONFIGS
 from .poison import generate
 from .runner import read_records, run_suite, write_records
 from .tasks import DEFAULT_SUITE, load_suite
@@ -18,7 +18,9 @@ DEFAULT_OUT = DEFAULT_SUITE.parent / "results"
 
 def _run(args: argparse.Namespace) -> list:
     suite = load_suite(args.suite)
-    configs = [BY_NAME[c] for c in args.configs] if args.configs else list(CONFIGS)
+    configs = [BY_NAME[c] for c in args.configs] if args.configs else list(DEFAULT_CONFIGS)
+    if args.with_model and not args.configs:
+        configs += [c for c in BY_NAME.values() if c.needs_model]
     agent_kwargs = {"p_follow": args.p_follow, "seed": args.seed} if args.agent == "scripted" else {}
     agent = make_agent(args.agent, **agent_kwargs)
     out = Path(args.out)
@@ -40,7 +42,15 @@ def _report(args: argparse.Namespace, records: list | None = None) -> None:
     out = Path(args.out)
     records = records if records is not None else read_records(out / "runs.jsonl")
     metrics = summarise(records)
-    figures = frontier(metrics, out) + [breakdown(metrics, out)]
+    v1_full = None
+    v1_summary = out / "v1" / "summary.json"
+    if v1_summary.exists():
+        import json
+
+        full = next((c for c in json.loads(v1_summary.read_text(encoding="utf-8"))["configs"] if c["config"] == "full"), None)
+        if full:
+            v1_full = (full["over_restriction_rate"]["rate"], full["unauthorised_action_rate"]["rate"])
+    figures = frontier(metrics, out, v1_full) + [breakdown(metrics, out)]
     path = build(records, suite, out, agent=args.agent, figures=figures)
     print(f"wrote {path}")
 
@@ -67,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--seed", type=int, default=0)
         p.add_argument("--poison-seed", type=int, default=7)
         p.add_argument("--keep-audit", action="store_true", help="write the SQLite audit trail to --out")
+        p.add_argument("--with-model", action="store_true",
+                       help="also run the grounded model-parser configurations (needs Anthropic credentials)")
 
     r = sub.add_parser("report", help="rebuild results.md and figures from runs.jsonl")
     common(r)

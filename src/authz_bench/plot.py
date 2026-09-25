@@ -14,7 +14,9 @@ GRID = "#e1e0d9"
 AXIS = "#c3c2b7"
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]  # validated categorical slots 1-4 (light)
 
-MEDIATOR_FAMILY = {"tools+args", "full", "full-global", "full+esc-attentive", "oracle-intent", "paraphrased"}
+MEDIATOR_FAMILY = {"tools+args", "full", "full-global", "full+esc-attentive", "full+esc-attentive-nohist",
+                   "full+confirm-amounts", "oracle-intent", "paraphrased", "heldout", "full-v1-derivation",
+                   "model", "model-heldout"}
 
 SHORT = {
     "no-mediator": "No mediator",
@@ -26,18 +28,25 @@ SHORT = {
     "full+esc-rubber": "Full + escalation, rubber-stamp user",
     "read-only": "Deny all\nirreversible",
     "oracle-intent": "Full, hand-labelled intent",
-    "paraphrased": "Full, held-out\nparaphrases",
+    "paraphrased": "Full, paraphrases",
+    "heldout": "Full, held-out requests",
+    "full+confirm-amounts": "Full + confirm unstated\namounts (attentive)",
+    "model": "Grounded model parser",
+    "model-heldout": "Grounded model parser,\nheld-out",
 }
 # label placement per group, keyed by the group's first member: (dx, dy) in points, ha, va
 PLACE = {
     "no-mediator": (9, 1, "left", "bottom"),
     "full+esc-rubber": (9, -3, "left", "top"),
     "read-only": (-6, 9, "right", "bottom"),
-    "full+esc-attentive": (-3, 9, "left", "bottom"),
-    "tools+args": (10, 2, "left", "bottom"),
-    "full": (10, -2, "left", "top"),
-    "paraphrased": (-6, 9, "right", "bottom"),
+    "full+esc-attentive": (9, -3, "left", "top"),
+    "full+confirm-amounts": (9, 0, "left", "center"),
+    "tools+args": (-4, 8, "right", "bottom"),
+    "heldout": (4, 8, "left", "bottom"),
+    "full": (6, -8, "left", "top"),
+    "paraphrased": (9, 0, "left", "center"),
 }
+ZOOM = (26.0, 5.2)  # x (over-restriction %) and y (unauthorised %) extent of the zoom panel
 
 
 def _style(ax) -> None:
@@ -60,7 +69,11 @@ def _pct(ax) -> None:
     ax.yaxis.set_major_formatter(fmt)
 
 
-def frontier(metrics: list[ConfigMetrics], out: Path) -> list[Path]:
+def frontier(metrics: list[ConfigMetrics], out: Path, v1_full: tuple[float, float] | None = None) -> list[Path]:
+    """``v1_full``: (over-restriction, unauthorised) of v1's full configuration, drawn hollow for comparison."""
+    from .configs import BY_NAME
+
+    metrics = [m for m in metrics if m.config not in BY_NAME or BY_NAME[m.config].frontier]
     import matplotlib
 
     matplotlib.use("Agg")
@@ -95,22 +108,32 @@ def frontier(metrics: list[ConfigMetrics], out: Path) -> list[Path]:
             ax.errorbar(x, y, xerr=[[x - 100 * xl], [100 * xh - x]], yerr=[[y - 100 * yl], [100 * yh - y]],
                         fmt="none", ecolor=colour, elinewidth=0.9, alpha=0.4, capsize=0, zorder=2)
             ax.scatter([x], [y], s=64, color=colour, edgecolors=SURFACE, linewidths=2, zorder=3)
-            visible = (x <= 40 and y <= 12) if zoom else (y > 12 or x > 40)
+            inside = x <= ZOOM[0] and y <= ZOOM[1]
+            visible = inside if zoom else not inside
             if visible:
                 dx, dy, ha, va = PLACE.get(m0.config, (9, 0, "left", "center"))
                 ax.annotate("\n".join(SHORT.get(m.config, m.label) for m in ms), (x, y), xytext=(dx, dy),
                             textcoords="offset points", fontsize=7.5, color=INK_2, ha=ha, va=va, zorder=5,
                             linespacing=1.25,
                             bbox={"boxstyle": "square,pad=0.15", "facecolor": SURFACE, "edgecolor": "none"})
+        if v1_full is not None:
+            vx, vy = 100 * v1_full[0], 100 * v1_full[1]
+            ax.scatter([vx], [vy], s=64, facecolors="none", edgecolors=SERIES[0], linewidths=1.4, zorder=3)
+            if zoom and vx <= ZOOM[0] and vy <= ZOOM[1]:
+                ax.annotate("Full, v1", (vx, vy), xytext=(8, 0), textcoords="offset points", fontsize=7.5,
+                            color=INK_2, ha="left", va="center", zorder=5,
+                            bbox={"boxstyle": "square,pad=0.15", "facecolor": SURFACE, "edgecolor": "none"})
         _pct(ax)
 
     ax_all.set_xlim(-4, 104)
     ax_all.set_ylim(-4, 104)
     ax_all.set_title("All configurations", fontsize=9.5, color=INK, loc="left", pad=8)
-    ax_all.add_patch(plt.Rectangle((-1, -1), 41, 13, fill=False, edgecolor=AXIS, linewidth=0.8, zorder=1))
-    ax_all.annotate("zoomed at right", (40, 12), xytext=(4, 4), textcoords="offset points", fontsize=7, color=MUTED)
-    ax_zoom.set_xlim(-2, 42)
-    ax_zoom.set_ylim(-0.6, 12)
+    ax_all.add_patch(plt.Rectangle((-1.5, -1.5), ZOOM[0] + 1.5, ZOOM[1] + 1.5, fill=False, edgecolor=AXIS,
+                                   linewidth=0.8, zorder=1))
+    ax_all.annotate("zoomed at right", (ZOOM[0], ZOOM[1]), xytext=(4, 4), textcoords="offset points", fontsize=7,
+                    color=MUTED)
+    ax_zoom.set_xlim(-1.5, ZOOM[0])
+    ax_zoom.set_ylim(-0.4, ZOOM[1])
     ax_zoom.set_title("Zoom: mediator configurations", fontsize=9.5, color=INK, loc="left", pad=8)
     for ax in (ax_all, ax_zoom):
         ax.set_xlabel("Over-restriction rate (clean runs blocked)", fontsize=8.5, color=INK_2)

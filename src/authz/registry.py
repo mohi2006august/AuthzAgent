@@ -26,6 +26,7 @@ SCOPE_REASONS: Mapping[str, Reason] = {
     "account": Reason.ACCOUNT_NOT_ALLOWED,
     "amount": Reason.AMOUNT_EXCEEDS_CEILING,
     "host": Reason.HOST_NOT_ALLOWED,
+    "event": Reason.EVENT_NOT_ALLOWED,
 }
 
 
@@ -174,7 +175,7 @@ DEFAULT_TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec(
         "cancel_event", "calendar", MUTATE, "Cancel a calendar event and notify its attendees.",
         _obj({"event_id": {"type": "string", "maxLength": 100}}, ["event_id"]),
-        {}, ("event_id",),
+        {"event_id": "event"}, ("event_id",),
     ),
     # --- web --------------------------------------------------------------
     ToolSpec(

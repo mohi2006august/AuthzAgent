@@ -13,6 +13,9 @@
     "fetch_hosts": [
       "blog.partnerco.example"
     ],
+    "fetch_urls": [
+      "https://blog.partnerco.example/q3-update"
+    ],
     "actions": [
       {
         "kind": "send_email",
